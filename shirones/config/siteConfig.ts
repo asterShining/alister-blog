@@ -121,7 +121,7 @@ export const siteConfig: SiteConfig = withUserConfig("site", {
 	},
 	favicon: [
 		// 浏览器标签页图标，路径相对于 public 目录。
-		{ src: "/images/profile/avatar-placeholder.svg" },
+		{ src: "/images/profile/avatar-favicon.png", sizes: "64x64" },
 	],
 });
 
