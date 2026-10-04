@@ -10,6 +10,13 @@ const starryTheme = {
   name: "alister-blog-starry-theme",
   hooks: {
     "astro:config:setup": ({ injectScript }) => {
+      // Shirone 0.1.5 defaults to auto. This inline head script runs after
+      // Shirone's initializer but before body paint, and only handles a new
+      // visitor with no stored preference. Its native switch owns later changes.
+      injectScript(
+        "head-inline",
+        `try { if (localStorage.getItem("theme") === null) { localStorage.setItem("theme", "light"); document.documentElement.classList.remove("dark"); document.documentElement.setAttribute("data-theme", "github-light"); } } catch {}`,
+      );
       injectScript(
         "page-ssr",
         `import ${JSON.stringify(starryThemeStyles)};`,

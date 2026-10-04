@@ -3,6 +3,11 @@
  * Shirone owns the light/dark switch (`html.dark`); this file only maps its
  * semantic tokens and backgrounds to Summer Blue or Starry Night.
  */
+html:root {
+	--theme-light-wallpaper: url("/images/themes/light/summer-school-bg.webp");
+	--theme-dark-wallpaper: url("/images/themes/dark/starry-lake-bg.webp");
+}
+
 html:root:not(.dark) {
 	color-scheme: light;
 	--theme-page: #e9f5ff;
@@ -21,7 +26,7 @@ html:root:not(.dark) {
 	--theme-shadow: 0 14px 36px rgb(32 73 110 / 13%);
 	--theme-shadow-hover: 0 18px 42px rgb(32 73 110 / 19%);
 	--theme-glass-blur: 10px;
-	--theme-wallpaper: url("/images/themes/light/summer-bg.webp");
+	--theme-wallpaper: var(--theme-light-wallpaper);
 
 	/* Shirone semantic tokens: keep every component on its native color path. */
 	--page-bg: var(--theme-page);
@@ -81,7 +86,7 @@ html:root.dark {
 	--theme-outline-soft: rgb(157 182 224 / 22%);
 	--theme-shadow: 0 18px 42px rgb(0 3 16 / 34%);
 	--theme-shadow-hover: 0 20px 48px rgb(0 3 16 / 45%);
-	--theme-wallpaper: url("/images/themes/dark/starry-bg.webp");
+	--theme-wallpaper: var(--theme-dark-wallpaper);
 
 	--page-bg: var(--theme-page);
 	--surface: rgb(8 17 39 / 88%);
@@ -126,24 +131,51 @@ html:root.dark {
 html {
 	min-height: 100%;
 	background-color: var(--theme-page);
-	background-image:
-		linear-gradient(180deg, rgb(236 247 255 / 16%), rgb(235 246 255 / 54%) 100%),
-		var(--theme-wallpaper);
-	background-position: center top;
-	background-size: cover;
-	background-attachment: fixed;
-}
-
-html.dark {
-	background-image:
-		linear-gradient(180deg, rgb(3 8 24 / 32%), rgb(3 8 24 / 50%) 100%),
-		var(--theme-wallpaper);
+	transition: background-color 350ms var(--m3e-easing-standard);
 }
 
 body {
 	min-height: 100vh;
 	background: transparent;
 	color: var(--theme-text);
+	isolation: isolate;
+}
+
+/* Body survives Swup page swaps. Both images remain mounted and only their
+ * opacity changes when Shirone toggles html.dark. No image or DOM swap. */
+body::before,
+body::after {
+	content: "";
+	position: fixed;
+	inset: 0;
+	z-index: -1;
+	pointer-events: none;
+	background-position: center 35%;
+	background-size: cover;
+	background-repeat: no-repeat;
+	transition: opacity 550ms var(--m3e-easing-standard);
+}
+
+body::before {
+	background-image:
+		linear-gradient(180deg, rgb(236 247 255 / 16%), rgb(235 246 255 / 54%)),
+		var(--theme-light-wallpaper);
+	opacity: 1;
+}
+
+body::after {
+	background-image:
+		linear-gradient(180deg, rgb(3 8 24 / 32%), rgb(3 8 24 / 50%)),
+		var(--theme-dark-wallpaper);
+	opacity: 0;
+}
+
+html.dark body::before {
+	opacity: 0;
+}
+
+html.dark body::after {
+	opacity: 1;
 }
 
 /* Preserve the source artwork while keeping article text comfortable to read. */
@@ -168,10 +200,41 @@ body {
 
 .banner-stage {
 	background: var(--theme-page);
+	transition: background-color 350ms var(--m3e-easing-standard);
 }
 
 .banner-stage__media {
-	background: var(--theme-wallpaper) center / cover no-repeat;
+	background: none;
+	position: absolute;
+}
+
+.banner-stage__media::before,
+.banner-stage__media::after {
+	content: "";
+	position: absolute;
+	inset: 0;
+	background-position: center 35%;
+	background-size: cover;
+	background-repeat: no-repeat;
+	transition: opacity 550ms var(--m3e-easing-standard);
+}
+
+.banner-stage__media::before {
+	background-image: var(--theme-light-wallpaper);
+	opacity: 1;
+}
+
+.banner-stage__media::after {
+	background-image: var(--theme-dark-wallpaper);
+	opacity: 0;
+}
+
+html.dark .banner-stage__media::before {
+	opacity: 0;
+}
+
+html.dark .banner-stage__media::after {
+	opacity: 1;
 }
 
 /* Shirone 0.1.5 keeps the initial light <source> for a single-image banner.
@@ -203,6 +266,10 @@ body[data-current-page="home"] .banner-stage__copy p {
 	box-shadow: var(--theme-shadow);
 	-webkit-backdrop-filter: blur(var(--theme-glass-blur)) saturate(112%);
 	backdrop-filter: blur(var(--theme-glass-blur)) saturate(112%);
+	transition:
+		background-color 320ms var(--m3e-easing-standard),
+		border-color 320ms var(--m3e-easing-standard),
+		box-shadow 360ms var(--m3e-easing-standard);
 }
 
 .m3-profile__avatar-link {
@@ -216,9 +283,9 @@ body[data-current-page="home"] .banner-stage__copy p {
 
 .m3-blog-postcard {
 	transition:
-		background-color var(--m3e-duration-medium) var(--m3e-easing-standard),
-		border-color var(--m3e-duration-medium) var(--m3e-easing-standard),
-		box-shadow var(--m3e-duration-medium) var(--m3e-easing-standard),
+		background-color 320ms var(--m3e-easing-standard),
+		border-color 320ms var(--m3e-easing-standard),
+		box-shadow 360ms var(--m3e-easing-standard),
 		transform var(--m3e-duration-medium) var(--m3e-easing-emphasized-decelerate);
 }
 
@@ -271,14 +338,36 @@ html.motion-reduced .m3-blog-postcard {
 }
 
 @media (prefers-reduced-motion: reduce) {
+	html,
+	.banner-stage,
+	body::before,
+	body::after,
+	.banner-stage__media::before,
+	.banner-stage__media::after,
+	.m3-profile,
 	.m3-blog-postcard {
 		transition: none;
 	}
 }
 
+html.motion-reduced body::before,
+html.motion-reduced body::after,
+html.motion-reduced .banner-stage__media::before,
+html.motion-reduced .banner-stage__media::after,
+html.motion-reduced .banner-stage,
+html.motion-reduced .m3-profile {
+	transition: none;
+}
+
 @media (max-width: 767.98px) {
-	html {
-		background-attachment: scroll;
+	body::before,
+	.banner-stage__media::before {
+		background-position: 33% center;
+	}
+
+	body::after,
+	.banner-stage__media::after {
+		background-position: 54% center;
 	}
 
 	.m3-blog-postcard:hover {
