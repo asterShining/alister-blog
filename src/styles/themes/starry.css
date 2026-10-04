@@ -72,10 +72,15 @@ body[data-current-page="home"] .banner-stage {
 
 body[data-current-page="home"] .banner-stage__scrim {
 	background-image:
-		linear-gradient(180deg, rgb(3 6 24 / 16%), rgb(6 8 30 / 48%)),
+		linear-gradient(90deg, rgb(3 6 24 / 34%), rgb(6 8 30 / 12%) 58%, rgb(6 8 30 / 30%)),
+		linear-gradient(180deg, rgb(3 6 24 / 10%), rgb(6 8 30 / 48%)),
 		url("/images/themes/starry/deco-stars.webp");
-	background-position: center, center;
-	background-size: cover, cover;
+	background-position: center, center, center;
+	background-size: cover, cover, cover;
+}
+
+body[data-current-page="home"] .banner-stage__image {
+	filter: saturate(92%) contrast(1.03);
 }
 
 body[data-current-page="home"] .banner-stage__copy h1 {
@@ -92,31 +97,23 @@ body[data-current-page="home"] .banner-stage__copy p {
 	text-shadow: 0 2px 16px rgb(3 4 20 / 88%);
 }
 
-@media (min-width: 1500px) {
-	body[data-current-page="home"] .banner-stage::before,
-	body[data-current-page="home"] .banner-stage::after {
-		position: absolute;
-		z-index: 1;
-		bottom: -16%;
-		width: min(25vw, 25rem);
-		height: 94%;
-		background-position: center bottom;
-		background-repeat: no-repeat;
-		background-size: contain;
+/* A single low-contrast vignette replaces independent character cutouts. */
+@media (min-width: 1280px) {
+	body[data-current-page="home"]::after {
+		position: fixed;
+		z-index: 2;
+		right: clamp(-5.5rem, -4vw, -3rem);
+		bottom: -5rem;
+		width: clamp(20rem, 24vw, 25rem);
+		aspect-ratio: 4 / 5;
+		background: url("/images/themes/starry/character-group-right.webp") right bottom / contain no-repeat;
 		content: "";
-		opacity: 0.42;
+		opacity: 0.16;
 		pointer-events: none;
-		filter: drop-shadow(0 0 28px rgb(119 104 255 / 25%));
-	}
-
-	body[data-current-page="home"] .banner-stage::before {
-		left: -3rem;
-		background-image: url("/images/themes/starry/character-left.webp");
-	}
-
-	body[data-current-page="home"] .banner-stage::after {
-		right: -3rem;
-		background-image: url("/images/themes/starry/character-right.webp");
+		filter:
+			saturate(82%)
+			drop-shadow(0 0 30px rgb(105 93 222 / 22%));
+		mask-image: linear-gradient(135deg, transparent 2%, #000 30%, #000 76%, transparent 100%);
 	}
 }
 

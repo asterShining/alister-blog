@@ -6,7 +6,8 @@ import { withUserConfig } from "@/utils/config-overlay.ts";
  * 类型见 src/types/config.ts。
  */
 export const profileConfig: ProfileConfig = withUserConfig("profile", {
-	avatar: "/images/themes/starry/avatar.webp", // Relative to public when the path starts with '/'
+	// Replace this file in public/ or point this field at the user's final avatar.
+	avatar: "/images/themes/starry/avatar-placeholder.webp",
 	name: "Alister",
 	bio: "代码、幻想与日常。",
 	// Add personal accounts here when their URLs are ready.
