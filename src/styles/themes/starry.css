@@ -65,12 +65,12 @@ body {
 	color: var(--starry-text-primary);
 }
 
-/* Homepage banner: keep Shirone's stage and animation, replace only its skin. */
-body[data-current-page="home"] .banner-stage {
+/* Site banners: keep Shirone's stage and animation, replace only their skin. */
+.banner-stage {
 	background: var(--starry-bg-secondary);
 }
 
-body[data-current-page="home"] .banner-stage__scrim {
+.banner-stage__scrim {
 	background-image:
 		linear-gradient(90deg, rgb(3 6 24 / 34%), rgb(6 8 30 / 12%) 58%, rgb(6 8 30 / 30%)),
 		linear-gradient(180deg, rgb(3 6 24 / 10%), rgb(6 8 30 / 48%)),
@@ -79,7 +79,7 @@ body[data-current-page="home"] .banner-stage__scrim {
 	background-size: cover, cover, cover;
 }
 
-body[data-current-page="home"] .banner-stage__image {
+.banner-stage__image {
 	filter: saturate(92%) contrast(1.03);
 }
 
