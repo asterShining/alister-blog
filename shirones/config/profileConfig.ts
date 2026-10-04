@@ -7,7 +7,7 @@ import { withUserConfig } from "@/utils/config-overlay.ts";
  */
 export const profileConfig: ProfileConfig = withUserConfig("profile", {
 	// Replace this file in public/ or point this field at the user's final avatar.
-	avatar: "/images/themes/starry/avatar-placeholder.webp",
+	avatar: "/images/profile/avatar-placeholder.svg",
 	name: "Alister",
 	bio: "代码、幻想与日常。",
 	// Add personal accounts here when their URLs are ready.

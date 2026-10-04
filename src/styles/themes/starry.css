@@ -1,165 +1,220 @@
 /*
- * Starry visual skin for Alister Blog.
- * Keep all theme-specific values here so a future theme switcher can replace
- * this token set without changing Shirone components or page structure.
+ * Alister Blog dual palette.
+ * Shirone owns the light/dark switch (`html.dark`); this file only maps its
+ * semantic tokens and backgrounds to Summer Blue or Starry Night.
  */
-:root:root {
-	color-scheme: dark;
-	--starry-bg-primary: #070b23;
-	--starry-bg-secondary: #15113b;
-	--starry-card-bg: rgb(12 17 49 / 76%);
-	--starry-card-bg-hover: rgb(20 25 68 / 86%);
-	--starry-card-border: rgb(167 139 250 / 30%);
-	--starry-text-primary: #f6f3ff;
-	--starry-text-secondary: #c9c3e6;
-	--starry-primary: var(--mc-primary, #a78bfa);
-	--starry-accent: var(--mc-tertiary, #67d8ff);
-	--starry-highlight: #f2ddff;
-	--starry-shadow: 0 18px 48px rgb(2 4 20 / 42%);
-	--starry-shadow-hover: 0 22px 56px rgb(76 54 170 / 32%);
-	--starry-glass-blur: 18px;
+html:root:not(.dark) {
+	color-scheme: light;
+	--theme-page: #e9f5ff;
+	--theme-surface: rgb(245 251 255 / 82%);
+	--theme-surface-soft: rgb(238 248 255 / 78%);
+	--theme-surface-raised: rgb(255 255 255 / 91%);
+	--theme-text: #172b43;
+	--theme-text-muted: #45617b;
+	--theme-primary: #287bc2;
+	--theme-primary-container: #d4ebff;
+	--theme-on-primary-container: #123f68;
+	--theme-secondary: #397d96;
+	--theme-tertiary: #4389a8;
+	--theme-outline: rgb(52 105 147 / 34%);
+	--theme-outline-soft: rgb(52 105 147 / 18%);
+	--theme-shadow: 0 14px 36px rgb(32 73 110 / 13%);
+	--theme-shadow-hover: 0 18px 42px rgb(32 73 110 / 19%);
+	--theme-glass-blur: 10px;
+	--theme-wallpaper: url("/images/themes/light/summer-bg.webp");
 
-	/* Map Shirone's public semantic tokens onto the Starry palette. */
-	--page-bg: var(--starry-bg-primary);
-	--card-bg: var(--starry-card-bg);
-	--float-panel-bg: rgb(14 19 52 / 92%);
-	--on-surface: var(--starry-text-primary);
-	--on-surface-variant: var(--starry-text-secondary);
-	--primary: var(--starry-primary);
-	--tertiary: var(--starry-accent);
-	--outline: rgb(186 177 226 / 52%);
-	--outline-variant: var(--starry-card-border);
-	--btn-content: var(--starry-text-secondary);
-	--btn-regular-bg: rgb(129 108 219 / 16%);
-	--btn-regular-bg-hover: rgb(129 108 219 / 28%);
-	--btn-regular-bg-active: rgb(103 216 255 / 25%);
-	--btn-plain-bg-hover: rgb(167 139 250 / 14%);
-	--btn-plain-bg-active: rgb(103 216 255 / 18%);
-	--link-hover: var(--starry-accent);
-	--link-active: var(--starry-highlight);
+	/* Shirone semantic tokens: keep every component on its native color path. */
+	--page-bg: var(--theme-page);
+	--surface: rgb(234 246 255 / 88%);
+	--surface-dim: #e4f1fc;
+	--surface-bright: #fbfdff;
+	--surface-container-lowest: rgb(255 255 255 / 93%);
+	--surface-container-low: var(--theme-surface-soft);
+	--surface-container: var(--theme-surface);
+	--surface-container-high: var(--theme-surface-raised);
+	--surface-container-highest: #fff;
+	--surface-variant: #dcecf8;
+	--float-panel-bg: rgb(246 251 255 / 96%);
+	--card-bg: var(--theme-surface);
+	--on-surface: var(--theme-text);
+	--on-surface-variant: var(--theme-text-muted);
+	--primary: var(--theme-primary);
+	--on-primary: #fff;
+	--primary-container: var(--theme-primary-container);
+	--on-primary-container: var(--theme-on-primary-container);
+	--secondary: var(--theme-secondary);
+	--secondary-container: #d9eff4;
+	--on-secondary-container: #183e4b;
+	--tertiary: var(--theme-tertiary);
+	--tertiary-container: #d8f0f8;
+	--on-tertiary-container: #153d4c;
+	--outline: var(--theme-outline);
+	--outline-variant: var(--theme-outline-soft);
+	--btn-content: var(--theme-text-muted);
+	--btn-regular-bg: rgb(210 235 252 / 72%);
+	--btn-regular-bg-hover: rgb(196 227 249 / 90%);
+	--btn-regular-bg-active: #c5e4fa;
+	--btn-plain-bg-hover: rgb(199 230 250 / 68%);
+	--btn-plain-bg-active: rgb(174 218 246 / 76%);
+	--link-hover: #176cae;
+	--link-active: #155d94;
+	--inline-code-bg: #dfedf8;
+	--inline-code-color: #254e70;
+	--codeblock-bg: rgb(239 247 253 / 96%);
+	--codeblock-topbar-bg: #e1eff9;
 }
 
-:root:root.dark {
-	--starry-bg-primary: #040718;
-	--starry-bg-secondary: #100d30;
-	--starry-card-bg: rgb(9 13 39 / 82%);
-	--starry-card-bg-hover: rgb(17 21 59 / 90%);
-	--starry-card-border: rgb(154 136 232 / 34%);
-	--starry-text-primary: #f4f2ff;
-	--starry-text-secondary: #bbb6d5;
-	--starry-shadow: 0 20px 54px rgb(0 2 15 / 56%);
+html:root.dark {
+	color-scheme: dark;
+	--theme-page: #050b1d;
+	--theme-surface: rgb(9 19 43 / 82%);
+	--theme-surface-soft: rgb(13 25 54 / 82%);
+	--theme-surface-raised: rgb(17 31 64 / 90%);
+	--theme-text: #eef4ff;
+	--theme-text-muted: #bdcbe0;
+	--theme-primary: #9bbcff;
+	--theme-primary-container: #263d67;
+	--theme-on-primary-container: #e0ebff;
+	--theme-secondary: #a9d4e8;
+	--theme-tertiary: #c4b8ff;
+	--theme-outline: rgb(160 187 230 / 42%);
+	--theme-outline-soft: rgb(157 182 224 / 22%);
+	--theme-shadow: 0 18px 42px rgb(0 3 16 / 34%);
+	--theme-shadow-hover: 0 20px 48px rgb(0 3 16 / 45%);
+	--theme-wallpaper: url("/images/themes/dark/starry-bg.webp");
+
+	--page-bg: var(--theme-page);
+	--surface: rgb(8 17 39 / 88%);
+	--surface-dim: #070f24;
+	--surface-bright: #172746;
+	--surface-container-lowest: rgb(7 15 34 / 91%);
+	--surface-container-low: var(--theme-surface-soft);
+	--surface-container: var(--theme-surface);
+	--surface-container-high: var(--theme-surface-raised);
+	--surface-container-highest: #203453;
+	--surface-variant: #263955;
+	--float-panel-bg: rgb(10 19 42 / 97%);
+	--card-bg: var(--theme-surface);
+	--on-surface: var(--theme-text);
+	--on-surface-variant: var(--theme-text-muted);
+	--primary: var(--theme-primary);
+	--on-primary: #102447;
+	--primary-container: var(--theme-primary-container);
+	--on-primary-container: var(--theme-on-primary-container);
+	--secondary: var(--theme-secondary);
+	--secondary-container: #244557;
+	--on-secondary-container: #d6eff9;
+	--tertiary: var(--theme-tertiary);
+	--tertiary-container: #39365f;
+	--on-tertiary-container: #e4deff;
+	--outline: var(--theme-outline);
+	--outline-variant: var(--theme-outline-soft);
+	--btn-content: var(--theme-text-muted);
+	--btn-regular-bg: rgb(111 145 201 / 17%);
+	--btn-regular-bg-hover: rgb(124 157 211 / 25%);
+	--btn-regular-bg-active: rgb(130 166 229 / 32%);
+	--btn-plain-bg-hover: rgb(127 155 206 / 17%);
+	--btn-plain-bg-active: rgb(127 155 206 / 25%);
+	--link-hover: #c1d4ff;
+	--link-active: #d7d0ff;
+	--inline-code-bg: #192a49;
+	--inline-code-color: #d4def2;
+	--codeblock-bg: rgb(7 15 34 / 96%);
+	--codeblock-topbar-bg: #132542;
 }
 
 html {
-	background-color: var(--starry-bg-primary);
+	min-height: 100%;
+	background-color: var(--theme-page);
 	background-image:
-		linear-gradient(180deg, rgb(5 8 29 / 18%), var(--starry-bg-primary) 92%),
-		url("/images/themes/starry/background.webp");
+		linear-gradient(180deg, rgb(236 247 255 / 16%), rgb(235 246 255 / 54%) 100%),
+		var(--theme-wallpaper);
 	background-position: center top;
 	background-size: cover;
 	background-attachment: fixed;
 }
 
+html.dark {
+	background-image:
+		linear-gradient(180deg, rgb(3 8 24 / 32%), rgb(3 8 24 / 50%) 100%),
+		var(--theme-wallpaper);
+}
+
 body {
+	min-height: 100vh;
 	background: transparent;
-	color: var(--starry-text-primary);
+	color: var(--theme-text);
 }
 
-/* Keep Markdown readable when Starry is active with Shirone's light color mode. */
-html .custom-md {
-	--tw-prose-body: var(--starry-text-secondary);
-	--tw-prose-headings: var(--starry-text-primary);
-	--tw-prose-lead: var(--starry-text-secondary);
-	--tw-prose-links: var(--starry-accent);
-	--tw-prose-bold: var(--starry-text-primary);
-	--tw-prose-counters: var(--starry-text-secondary);
-	--tw-prose-bullets: var(--starry-accent);
-	--tw-prose-hr: var(--starry-card-border);
-	--tw-prose-quotes: var(--starry-text-primary);
-	--tw-prose-quote-borders: var(--starry-primary);
-	--tw-prose-captions: var(--starry-text-secondary);
-	--tw-prose-code: var(--starry-highlight);
-	--tw-prose-pre-code: var(--starry-text-primary);
-	--tw-prose-pre-bg: var(--starry-card-bg);
-	--tw-prose-th-borders: var(--starry-card-border);
-	--tw-prose-td-borders: var(--starry-card-border);
+/* Preserve the source artwork while keeping article text comfortable to read. */
+.custom-md {
+	--tw-prose-body: var(--theme-text-muted);
+	--tw-prose-headings: var(--theme-text);
+	--tw-prose-lead: var(--theme-text-muted);
+	--tw-prose-links: var(--primary);
+	--tw-prose-bold: var(--theme-text);
+	--tw-prose-counters: var(--theme-text-muted);
+	--tw-prose-bullets: var(--primary);
+	--tw-prose-hr: var(--theme-outline-soft);
+	--tw-prose-quotes: var(--theme-text);
+	--tw-prose-quote-borders: var(--primary);
+	--tw-prose-captions: var(--theme-text-muted);
+	--tw-prose-code: var(--theme-text);
+	--tw-prose-pre-code: var(--theme-text);
+	--tw-prose-pre-bg: var(--codeblock-bg);
+	--tw-prose-th-borders: var(--theme-outline-soft);
+	--tw-prose-td-borders: var(--theme-outline-soft);
 }
 
-/* Site banners: keep Shirone's stage and animation, replace only their skin. */
 .banner-stage {
-	background: var(--starry-bg-secondary);
+	background: var(--theme-page);
+}
+
+.banner-stage__media {
+	background: var(--theme-wallpaper) center / cover no-repeat;
+}
+
+/* Shirone 0.1.5 keeps the initial light <source> for a single-image banner.
+ * Use the same theme token as the page so the visible art switches instantly. */
+.banner-stage__image {
+	visibility: hidden;
 }
 
 .banner-stage__scrim {
-	background-image:
-		linear-gradient(90deg, rgb(3 6 24 / 34%), rgb(6 8 30 / 12%) 58%, rgb(6 8 30 / 30%)),
-		linear-gradient(180deg, rgb(3 6 24 / 10%), rgb(6 8 30 / 48%)),
-		url("/images/themes/starry/deco-stars.webp");
-	background-position: center, center, center;
-	background-size: cover, cover, cover;
+	background: linear-gradient(180deg, rgb(12 48 80 / 60%), rgb(12 48 80));
+	opacity: var(--banner-dim-opacity);
 }
 
-.banner-stage__image {
-	filter: saturate(92%) contrast(1.03);
+html.dark .banner-stage__scrim {
+	background: linear-gradient(180deg, rgb(3 8 24 / 90%), rgb(3 8 24));
 }
 
-body[data-current-page="home"] .banner-stage__copy h1 {
-	color: var(--starry-text-primary);
-	letter-spacing: 0.035em;
-	text-shadow:
-		0 0 18px rgb(139 124 255 / 68%),
-		0 0 42px rgb(103 216 255 / 30%),
-		0 3px 16px rgb(2 3 18 / 75%);
-}
-
+body[data-current-page="home"] .banner-stage__copy h1,
 body[data-current-page="home"] .banner-stage__copy p {
-	color: var(--starry-highlight);
-	text-shadow: 0 2px 16px rgb(3 4 20 / 88%);
+	color: #fff;
+	text-shadow: 0 2px 14px rgb(4 19 39 / 50%);
 }
 
-/* A single low-contrast vignette replaces independent character cutouts. */
-@media (min-width: 1280px) {
-	body[data-current-page="home"]::after {
-		position: fixed;
-		z-index: 2;
-		right: clamp(-5.5rem, -4vw, -3rem);
-		bottom: -5rem;
-		width: clamp(20rem, 24vw, 25rem);
-		aspect-ratio: 4 / 5;
-		background: url("/images/themes/starry/character-group-right.webp") right bottom / contain no-repeat;
-		content: "";
-		opacity: 0.16;
-		pointer-events: none;
-		filter:
-			saturate(82%)
-			drop-shadow(0 0 30px rgb(105 93 222 / 22%));
-		mask-image: linear-gradient(135deg, transparent 2%, #000 30%, #000 76%, transparent 100%);
-	}
+/* Light glass on the existing sidebar and article cards; no layout changes. */
+.m3-profile,
+.m3-blog-postcard {
+	border: 1px solid var(--theme-outline-soft);
+	background: var(--theme-surface);
+	box-shadow: var(--theme-shadow);
+	-webkit-backdrop-filter: blur(var(--theme-glass-blur)) saturate(112%);
+	backdrop-filter: blur(var(--theme-glass-blur)) saturate(112%);
 }
 
-/* Glass surfaces applied only to the requested sidebar and post cards. */
-html .m3-profile,
-html .m3-blog-postcard {
-	border: 1px solid var(--starry-card-border);
-	background: var(--starry-card-bg);
-	box-shadow: var(--starry-shadow);
-	-webkit-backdrop-filter: blur(var(--starry-glass-blur)) saturate(125%);
-	backdrop-filter: blur(var(--starry-glass-blur)) saturate(125%);
+.m3-profile__avatar-link {
+	border: 1px solid color-mix(in srgb, var(--theme-primary) 34%, transparent);
+	box-shadow: 0 8px 24px color-mix(in srgb, var(--theme-primary) 16%, transparent);
 }
 
-html .m3-profile__avatar-link {
-	border: 1px solid color-mix(in srgb, var(--starry-accent) 48%, transparent);
-	box-shadow:
-		0 0 0 4px rgb(167 139 250 / 8%),
-		0 12px 34px rgb(1 3 18 / 42%);
+.m3-profile__accent {
+	background: linear-gradient(90deg, var(--theme-primary), var(--theme-secondary));
 }
 
-html .m3-profile__accent {
-	background: linear-gradient(90deg, var(--starry-primary), var(--starry-accent));
-	box-shadow: 0 0 14px color-mix(in srgb, var(--starry-accent) 45%, transparent);
-}
-
-html .m3-blog-postcard {
+.m3-blog-postcard {
 	transition:
 		background-color var(--m3e-duration-medium) var(--m3e-easing-standard),
 		border-color var(--m3e-duration-medium) var(--m3e-easing-standard),
@@ -167,33 +222,40 @@ html .m3-blog-postcard {
 		transform var(--m3e-duration-medium) var(--m3e-easing-emphasized-decelerate);
 }
 
-html .m3-blog-postcard:hover {
-	border-color: color-mix(in srgb, var(--starry-accent) 52%, transparent);
-	background: var(--starry-card-bg-hover);
-	box-shadow: var(--starry-shadow-hover);
+.m3-blog-postcard:hover {
+	border-color: color-mix(in srgb, var(--theme-primary) 42%, transparent);
+	background: var(--theme-surface-raised);
+	box-shadow: var(--theme-shadow-hover);
 	transform: translateY(-2px);
 }
 
-/*
- * Swup navigation: keep the Starry glass look, but stop paying for it while the
- * page is actually being swapped.
- *
- * Swup puts `is-changing` / `is-animating` on <html> for the duration of a
- * client-side visit (the class names come from @swup/astro's animationClass,
- * not from a guess). Two Starry effects are expensive precisely in that window:
- *
- * 1. The ambient texture canvas runs `mask-position` keyframes. Mask position is
- *    not a compositor property, so it repaints the whole viewport every frame
- *    for as long as the page stays open — and every backdrop-filtered card above
- *    it has to re-sample that backdrop on each of those frames. Freezing the
- *    animation for the transition keeps the texture (same position, same look)
- *    while letting the incoming page paint against a static backdrop.
- * 2. The glass cards themselves. During `is-animating` the whole swup container
- *    is at opacity 0, so the blur is literally invisible; skipping it there
- *    removes a full re-filter of the card list from the cheapest moment to skip
- *    it. The blur is deliberately NOT dropped for all of `is-changing`: the
- *    fade-in afterwards is visible and removing the glass there would pop.
- */
+html.dark .m3-blog-postcard:hover {
+	background: var(--theme-surface-raised);
+}
+
+.page-header__title,
+.section-title__title,
+.m3-profile__name {
+	color: var(--theme-text);
+}
+
+.page-header__icon,
+.section-title__icon {
+	color: var(--theme-primary);
+}
+
+.m3-blog-postcard__title:hover,
+.m3-blog-tagbadge:hover,
+.custom-md a:hover,
+.link:hover {
+	color: var(--link-hover);
+}
+
+.m3-blog-tagbadge {
+	border: 1px solid var(--theme-outline-soft);
+}
+
+/* Freeze the static texture during Swup's swap to avoid viewport repaints. */
 html.is-changing[data-texture-preset] #m3e-texture-canvas {
 	animation-play-state: paused;
 }
@@ -204,35 +266,14 @@ html.is-animating .m3-blog-postcard {
 	backdrop-filter: none;
 }
 
-/* Titles and interactive states share the same semantic accent tokens. */
-html .page-header__title,
-html .section-title__title,
-html .m3-profile__name {
-	color: var(--starry-text-primary);
-	text-shadow: 0 0 20px rgb(139 124 255 / 24%);
+html.motion-reduced .m3-blog-postcard {
+	transition: none;
 }
 
-html .page-header__icon,
-html .section-title__icon {
-	color: var(--starry-accent);
-	filter: drop-shadow(0 0 8px rgb(103 216 255 / 32%));
-}
-
-html .m3-blog-postcard__title:hover,
-html .m3-blog-tagbadge:hover,
-html .custom-md a:hover,
-html .link:hover {
-	color: var(--starry-accent);
-}
-
-html .m3-button:hover,
-html .m3-icon-button:hover,
-html .m3-blog-tagbadge:hover {
-	box-shadow: 0 0 18px rgb(122 104 225 / 24%);
-}
-
-html .m3-blog-tagbadge {
-	border: 1px solid rgb(167 139 250 / 16%);
+@media (prefers-reduced-motion: reduce) {
+	.m3-blog-postcard {
+		transition: none;
+	}
 }
 
 @media (max-width: 767.98px) {
@@ -240,17 +281,7 @@ html .m3-blog-tagbadge {
 		background-attachment: scroll;
 	}
 
-	html .m3-blog-postcard:hover {
+	.m3-blog-postcard:hover {
 		transform: none;
-	}
-}
-
-html.motion-reduced .m3-blog-postcard {
-	transition: none;
-}
-
-@media (prefers-reduced-motion: reduce) {
-	html .m3-blog-postcard {
-		transition: none;
 	}
 }
