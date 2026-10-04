@@ -10,6 +10,7 @@ encrypted: true
 password: "shirone-secret"
 passwordHint: "Hint: the demo unlock password is shirone-secret"
 hideHomeContent: true
+draft: true
 ---
 
 # Password Protected Article

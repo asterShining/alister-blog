@@ -65,6 +65,26 @@ body {
 	color: var(--starry-text-primary);
 }
 
+/* Keep Markdown readable when Starry is active with Shirone's light color mode. */
+html .custom-md {
+	--tw-prose-body: var(--starry-text-secondary);
+	--tw-prose-headings: var(--starry-text-primary);
+	--tw-prose-lead: var(--starry-text-secondary);
+	--tw-prose-links: var(--starry-accent);
+	--tw-prose-bold: var(--starry-text-primary);
+	--tw-prose-counters: var(--starry-text-secondary);
+	--tw-prose-bullets: var(--starry-accent);
+	--tw-prose-hr: var(--starry-card-border);
+	--tw-prose-quotes: var(--starry-text-primary);
+	--tw-prose-quote-borders: var(--starry-primary);
+	--tw-prose-captions: var(--starry-text-secondary);
+	--tw-prose-code: var(--starry-highlight);
+	--tw-prose-pre-code: var(--starry-text-primary);
+	--tw-prose-pre-bg: var(--starry-card-bg);
+	--tw-prose-th-borders: var(--starry-card-border);
+	--tw-prose-td-borders: var(--starry-card-border);
+}
+
 /* Site banners: keep Shirone's stage and animation, replace only their skin. */
 .banner-stage {
 	background: var(--starry-bg-secondary);

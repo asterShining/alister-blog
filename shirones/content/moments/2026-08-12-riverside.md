@@ -11,6 +11,7 @@ images:
     alt: Lovely girl wallpaper two
   - src: /images/moments/girls-trio/girl-3.webp
     alt: Lovely girl wallpaper three
+draft: true
 ---
 
 Three new wallpapers, all lovely girls.

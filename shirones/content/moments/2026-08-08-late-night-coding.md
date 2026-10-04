@@ -7,6 +7,7 @@ tags:
 images:
   - src: /images/moments/night/window-sun.webp
     alt: A girl by a sunlit window, the room dark around her
+draft: true
 ---
 
 Switched to a new wallpaper — a girl by a sunlit window, the room dark except for her.
