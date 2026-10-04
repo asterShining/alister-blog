@@ -6,4 +6,4 @@
 
 这里会整理 Web、Linux、嵌入式与机器人相关的实践，也会留下关于动漫、幻想和日常生活的片段。
 
-博客基于 Astro 与 Shirone 构建，目前使用 Starry 主题。内容仍在持续完善中。
+博客基于 Astro 与 Shirone 构建，提供 Summer Blue 与 Starry Night 两种视觉模式。内容仍在持续完善中。

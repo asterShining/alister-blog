@@ -29,7 +29,7 @@ html:root:not(.dark) {
 	--theme-outline-soft: rgb(52 105 147 / 18%);
 	--theme-shadow: 0 14px 36px rgb(32 73 110 / 13%);
 	--theme-shadow-hover: 0 18px 42px rgb(32 73 110 / 19%);
-	--theme-glass-blur: 10px;
+	--theme-glass-filter: blur(10px) saturate(112%);
 	--theme-wallpaper: var(--theme-light-wallpaper);
 
 	/* Shirone semantic tokens: keep every component on its native color path. */
@@ -90,6 +90,8 @@ html:root.dark {
 	--theme-outline-soft: rgb(157 182 224 / 22%);
 	--theme-shadow: 0 18px 42px rgb(0 3 16 / 34%);
 	--theme-shadow-hover: 0 20px 48px rgb(0 3 16 / 45%);
+	/* The dark surfaces are opaque enough without a costly backdrop pass. */
+	--theme-glass-filter: none;
 	--theme-wallpaper: var(--theme-dark-wallpaper);
 
 	--page-bg: var(--theme-page);
@@ -183,6 +185,13 @@ html.dark body::after {
 	opacity: 1;
 }
 
+/* Shirone's Wallpaper Mode hides its Banner; honor the same choice for the
+ * persistent page backdrop without changing the selected Light/Dark skin. */
+html[data-wallpaper-mode="none"] body::before,
+html[data-wallpaper-mode="none"] body::after {
+	opacity: 0;
+}
+
 /* Preserve the source artwork while keeping article text comfortable to read. */
 .custom-md {
 	--tw-prose-body: var(--theme-text-muted);
@@ -254,6 +263,17 @@ html.dark .banner-stage__media::after {
 	opacity: var(--banner-dim-opacity);
 }
 
+/* White Hero and Navbar text needs a dependable floor over bright clouds. */
+html:not(.dark) .banner-stage__scrim {
+	background: linear-gradient(
+		180deg,
+		rgb(5 30 54 / 66%) 0%,
+		rgb(7 36 64 / 70%) 52%,
+		rgb(5 30 54 / 48%) 100%
+	);
+	opacity: 1;
+}
+
 html.dark .banner-stage__scrim {
 	background: linear-gradient(180deg, rgb(3 8 24 / 90%), rgb(3 8 24));
 }
@@ -270,8 +290,8 @@ body[data-current-page="home"] .banner-stage__copy p {
 	border: 1px solid var(--theme-outline-soft);
 	background: var(--theme-surface);
 	box-shadow: var(--theme-shadow);
-	-webkit-backdrop-filter: blur(var(--theme-glass-blur)) saturate(112%);
-	backdrop-filter: blur(var(--theme-glass-blur)) saturate(112%);
+	-webkit-backdrop-filter: var(--theme-glass-filter);
+	backdrop-filter: var(--theme-glass-filter);
 	transition:
 		background-color 320ms var(--m3e-easing-standard),
 		border-color 320ms var(--m3e-easing-standard),
