@@ -32,7 +32,7 @@ export const siteConfig: SiteConfig = withUserConfig("site", {
 	timeZone: "Asia/Shanghai",
 	themeColor: {
 		hue: 275, // Starry 默认蓝紫色相；访客仍可通过 Shirone 配色面板调整强调色
-		fixed: false, // Hide the theme color picker for visitors
+		fixed: false, // Allow visitors to adjust Shirone's accent hue
 		// Dynamic Material 3 palette style (TonalSpot/Vibrant/Content/Expressive/Rainbow/FruitSalad/Monochrome/Neutral/Fidelity)
 		style: "tonalSpot",
 		// Design spec version: "2021" (MD3) or "2025" (M3 Expressive)。角色集一致，
