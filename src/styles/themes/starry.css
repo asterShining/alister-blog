@@ -4,8 +4,11 @@
  * semantic tokens and backgrounds to Summer Blue or Starry Night.
  */
 html:root {
+	/* Page backdrop and Hero are separate visual layers. */
 	--theme-light-wallpaper: url("/images/themes/light/summer-school-bg.webp");
 	--theme-dark-wallpaper: url("/images/themes/dark/starry-lake-bg.webp");
+	--hero-light-image: url("/images/themes/light/hero-summer.webp");
+	--hero-dark-image: url("/images/themes/dark/hero-starry.webp");
 }
 
 html:root:not(.dark) {
@@ -136,7 +139,8 @@ html {
 
 body {
 	min-height: 100vh;
-	background: transparent;
+	/* Keep a themed floor under the persistent wallpaper during Swup fades. */
+	background-color: var(--theme-page);
 	color: var(--theme-text);
 	isolation: isolate;
 }
@@ -213,19 +217,20 @@ html.dark body::after {
 	content: "";
 	position: absolute;
 	inset: 0;
-	background-position: center 35%;
+	background-position: center 70%;
 	background-size: cover;
 	background-repeat: no-repeat;
 	transition: opacity 550ms var(--m3e-easing-standard);
 }
 
 .banner-stage__media::before {
-	background-image: var(--theme-light-wallpaper);
+	background-image: var(--hero-light-image);
 	opacity: 1;
 }
 
 .banner-stage__media::after {
-	background-image: var(--theme-dark-wallpaper);
+	background-image: var(--hero-dark-image);
+	background-position: center 23%;
 	opacity: 0;
 }
 
@@ -238,7 +243,7 @@ html.dark .banner-stage__media::after {
 }
 
 /* Shirone 0.1.5 keeps the initial light <source> for a single-image banner.
- * Use the same theme token as the page so the visible art switches instantly. */
+ * The visible Hero uses its own two CSS layers while retaining the structure. */
 .banner-stage__image {
 	visibility: hidden;
 }
@@ -360,14 +365,20 @@ html.motion-reduced .m3-profile {
 }
 
 @media (max-width: 767.98px) {
-	body::before,
-	.banner-stage__media::before {
+	body::before {
 		background-position: 33% center;
 	}
 
-	body::after,
-	.banner-stage__media::after {
+	body::after {
 		background-position: 54% center;
+	}
+
+	.banner-stage__media::before {
+		background-position: center 60%;
+	}
+
+	.banner-stage__media::after {
+		background-position: center 35%;
 	}
 
 	.m3-blog-postcard:hover {

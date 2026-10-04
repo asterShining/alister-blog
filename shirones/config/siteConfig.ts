@@ -58,12 +58,12 @@ export const siteConfig: SiteConfig = withUserConfig("site", {
 		// 数组顺序就是轮播顺序；只需要静态 Banner 时，每组保留一张图片即可。
 		src: {
 			desktop: {
-				light: ["/images/themes/light/summer-school-bg.webp"],
-				dark: ["/images/themes/dark/starry-lake-bg.webp"],
+				light: ["/images/themes/light/hero-summer.webp"],
+				dark: ["/images/themes/dark/hero-starry.webp"],
 			},
 			mobile: {
-				light: ["/images/themes/light/summer-school-bg.webp"],
-				dark: ["/images/themes/dark/starry-lake-bg.webp"],
+				light: ["/images/themes/light/hero-summer.webp"],
+				dark: ["/images/themes/dark/hero-starry.webp"],
 			},
 		},
 		// 图片裁切焦点："top"、"center" 或 "bottom"。
