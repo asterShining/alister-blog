@@ -31,7 +31,7 @@ export const siteConfig: SiteConfig = withUserConfig("site", {
 	// IANA time zone for precise post and moment timestamps. It is independent of lang.
 	timeZone: "Asia/Shanghai",
 	themeColor: {
-		hue: 315, // Default hue 0-360. 站点设计默认粉紫（偏二次元）；262 紫 / 345 粉 也可选
+		hue: 275, // Starry 默认蓝紫色相；访客仍可通过 Shirone 配色面板调整强调色
 		fixed: false, // Hide the theme color picker for visitors
 		// Dynamic Material 3 palette style (TonalSpot/Vibrant/Content/Expressive/Rainbow/FruitSalad/Monochrome/Neutral/Fidelity)
 		style: "tonalSpot",
@@ -57,15 +57,15 @@ export const siteConfig: SiteConfig = withUserConfig("site", {
 		// desktop 用于 >= 1024px；mobile 仅用于 < 1024px 的首页，手机非首页不显示壁纸。
 		// 数组顺序就是轮播顺序；只需要静态 Banner 时，每组保留一张图片即可。
 		src: {
-			desktop: ["assets/images/banner/desktop/1.webp"],
-			mobile: ["assets/images/banner/mobile/1.webp"],
+			desktop: ["/images/themes/starry/banner.webp"],
+			mobile: ["/images/themes/starry/banner.webp"],
 		},
 		// 图片裁切焦点："top"、"center" 或 "bottom"。
 		position: "center",
 		dim: {
 			// 在图片上覆盖黑色遮罩以提高标题和顶部栏的对比度；opacity 范围为 0-1。
 			enable: true,
-			opacity: 0.24,
+			opacity: 0.32,
 		},
 		homeText: {
 			// 仅在首页 Banner 中显示，标题与副标题会上下居中排列。

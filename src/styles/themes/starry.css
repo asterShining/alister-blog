@@ -1,0 +1,209 @@
+/*
+ * Starry visual skin for Alister Blog.
+ * Keep all theme-specific values here so a future theme switcher can replace
+ * this token set without changing Shirone components or page structure.
+ */
+:root:root {
+	color-scheme: dark;
+	--starry-bg-primary: #070b23;
+	--starry-bg-secondary: #15113b;
+	--starry-card-bg: rgb(12 17 49 / 76%);
+	--starry-card-bg-hover: rgb(20 25 68 / 86%);
+	--starry-card-border: rgb(167 139 250 / 30%);
+	--starry-text-primary: #f6f3ff;
+	--starry-text-secondary: #c9c3e6;
+	--starry-primary: var(--mc-primary, #a78bfa);
+	--starry-accent: var(--mc-tertiary, #67d8ff);
+	--starry-highlight: #f2ddff;
+	--starry-shadow: 0 18px 48px rgb(2 4 20 / 42%);
+	--starry-shadow-hover: 0 22px 56px rgb(76 54 170 / 32%);
+	--starry-glass-blur: 18px;
+
+	/* Map Shirone's public semantic tokens onto the Starry palette. */
+	--page-bg: var(--starry-bg-primary);
+	--card-bg: var(--starry-card-bg);
+	--float-panel-bg: rgb(14 19 52 / 92%);
+	--on-surface: var(--starry-text-primary);
+	--on-surface-variant: var(--starry-text-secondary);
+	--primary: var(--starry-primary);
+	--tertiary: var(--starry-accent);
+	--outline: rgb(186 177 226 / 52%);
+	--outline-variant: var(--starry-card-border);
+	--btn-content: var(--starry-text-secondary);
+	--btn-regular-bg: rgb(129 108 219 / 16%);
+	--btn-regular-bg-hover: rgb(129 108 219 / 28%);
+	--btn-regular-bg-active: rgb(103 216 255 / 25%);
+	--btn-plain-bg-hover: rgb(167 139 250 / 14%);
+	--btn-plain-bg-active: rgb(103 216 255 / 18%);
+	--link-hover: var(--starry-accent);
+	--link-active: var(--starry-highlight);
+}
+
+:root:root.dark {
+	--starry-bg-primary: #040718;
+	--starry-bg-secondary: #100d30;
+	--starry-card-bg: rgb(9 13 39 / 82%);
+	--starry-card-bg-hover: rgb(17 21 59 / 90%);
+	--starry-card-border: rgb(154 136 232 / 34%);
+	--starry-text-primary: #f4f2ff;
+	--starry-text-secondary: #bbb6d5;
+	--starry-shadow: 0 20px 54px rgb(0 2 15 / 56%);
+}
+
+html {
+	background-color: var(--starry-bg-primary);
+	background-image:
+		linear-gradient(180deg, rgb(5 8 29 / 18%), var(--starry-bg-primary) 92%),
+		url("/images/themes/starry/background.webp");
+	background-position: center top;
+	background-size: cover;
+	background-attachment: fixed;
+}
+
+body {
+	background: transparent;
+	color: var(--starry-text-primary);
+}
+
+/* Homepage banner: keep Shirone's stage and animation, replace only its skin. */
+body[data-current-page="home"] .banner-stage {
+	background: var(--starry-bg-secondary);
+}
+
+body[data-current-page="home"] .banner-stage__scrim {
+	background-image:
+		linear-gradient(180deg, rgb(3 6 24 / 16%), rgb(6 8 30 / 48%)),
+		url("/images/themes/starry/deco-stars.webp");
+	background-position: center, center;
+	background-size: cover, cover;
+}
+
+body[data-current-page="home"] .banner-stage__copy h1 {
+	color: var(--starry-text-primary);
+	letter-spacing: 0.035em;
+	text-shadow:
+		0 0 18px rgb(139 124 255 / 68%),
+		0 0 42px rgb(103 216 255 / 30%),
+		0 3px 16px rgb(2 3 18 / 75%);
+}
+
+body[data-current-page="home"] .banner-stage__copy p {
+	color: var(--starry-highlight);
+	text-shadow: 0 2px 16px rgb(3 4 20 / 88%);
+}
+
+@media (min-width: 1500px) {
+	body[data-current-page="home"] .banner-stage::before,
+	body[data-current-page="home"] .banner-stage::after {
+		position: absolute;
+		z-index: 1;
+		bottom: -16%;
+		width: min(25vw, 25rem);
+		height: 94%;
+		background-position: center bottom;
+		background-repeat: no-repeat;
+		background-size: contain;
+		content: "";
+		opacity: 0.42;
+		pointer-events: none;
+		filter: drop-shadow(0 0 28px rgb(119 104 255 / 25%));
+	}
+
+	body[data-current-page="home"] .banner-stage::before {
+		left: -3rem;
+		background-image: url("/images/themes/starry/character-left.webp");
+	}
+
+	body[data-current-page="home"] .banner-stage::after {
+		right: -3rem;
+		background-image: url("/images/themes/starry/character-right.webp");
+	}
+}
+
+/* Glass surfaces applied only to the requested sidebar and post cards. */
+html .m3-profile,
+html .m3-blog-postcard {
+	border: 1px solid var(--starry-card-border);
+	background: var(--starry-card-bg);
+	box-shadow: var(--starry-shadow);
+	-webkit-backdrop-filter: blur(var(--starry-glass-blur)) saturate(125%);
+	backdrop-filter: blur(var(--starry-glass-blur)) saturate(125%);
+}
+
+html .m3-profile__avatar-link {
+	border: 1px solid color-mix(in srgb, var(--starry-accent) 48%, transparent);
+	box-shadow:
+		0 0 0 4px rgb(167 139 250 / 8%),
+		0 12px 34px rgb(1 3 18 / 42%);
+}
+
+html .m3-profile__accent {
+	background: linear-gradient(90deg, var(--starry-primary), var(--starry-accent));
+	box-shadow: 0 0 14px color-mix(in srgb, var(--starry-accent) 45%, transparent);
+}
+
+html .m3-blog-postcard {
+	transition:
+		background-color var(--m3e-duration-medium) var(--m3e-easing-standard),
+		border-color var(--m3e-duration-medium) var(--m3e-easing-standard),
+		box-shadow var(--m3e-duration-medium) var(--m3e-easing-standard),
+		transform var(--m3e-duration-medium) var(--m3e-easing-emphasized-decelerate);
+}
+
+html .m3-blog-postcard:hover {
+	border-color: color-mix(in srgb, var(--starry-accent) 52%, transparent);
+	background: var(--starry-card-bg-hover);
+	box-shadow: var(--starry-shadow-hover);
+	transform: translateY(-2px);
+}
+
+/* Titles and interactive states share the same semantic accent tokens. */
+html .page-header__title,
+html .section-title__title,
+html .m3-profile__name {
+	color: var(--starry-text-primary);
+	text-shadow: 0 0 20px rgb(139 124 255 / 24%);
+}
+
+html .page-header__icon,
+html .section-title__icon {
+	color: var(--starry-accent);
+	filter: drop-shadow(0 0 8px rgb(103 216 255 / 32%));
+}
+
+html .m3-blog-postcard__title:hover,
+html .m3-blog-tagbadge:hover,
+html .custom-md a:hover,
+html .link:hover {
+	color: var(--starry-accent);
+}
+
+html .m3-button:hover,
+html .m3-icon-button:hover,
+html .m3-blog-tagbadge:hover {
+	box-shadow: 0 0 18px rgb(122 104 225 / 24%);
+}
+
+html .m3-blog-tagbadge {
+	border: 1px solid rgb(167 139 250 / 16%);
+}
+
+@media (max-width: 767.98px) {
+	html {
+		background-attachment: scroll;
+	}
+
+	html .m3-blog-postcard:hover {
+		transform: none;
+	}
+}
+
+html.motion-reduced .m3-blog-postcard {
+	transition: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	html .m3-blog-postcard {
+		transition: none;
+	}
+}
