@@ -174,6 +174,36 @@ html .m3-blog-postcard:hover {
 	transform: translateY(-2px);
 }
 
+/*
+ * Swup navigation: keep the Starry glass look, but stop paying for it while the
+ * page is actually being swapped.
+ *
+ * Swup puts `is-changing` / `is-animating` on <html> for the duration of a
+ * client-side visit (the class names come from @swup/astro's animationClass,
+ * not from a guess). Two Starry effects are expensive precisely in that window:
+ *
+ * 1. The ambient texture canvas runs `mask-position` keyframes. Mask position is
+ *    not a compositor property, so it repaints the whole viewport every frame
+ *    for as long as the page stays open — and every backdrop-filtered card above
+ *    it has to re-sample that backdrop on each of those frames. Freezing the
+ *    animation for the transition keeps the texture (same position, same look)
+ *    while letting the incoming page paint against a static backdrop.
+ * 2. The glass cards themselves. During `is-animating` the whole swup container
+ *    is at opacity 0, so the blur is literally invisible; skipping it there
+ *    removes a full re-filter of the card list from the cheapest moment to skip
+ *    it. The blur is deliberately NOT dropped for all of `is-changing`: the
+ *    fade-in afterwards is visible and removing the glass there would pop.
+ */
+html.is-changing[data-texture-preset] #m3e-texture-canvas {
+	animation-play-state: paused;
+}
+
+html.is-animating .m3-profile,
+html.is-animating .m3-blog-postcard {
+	-webkit-backdrop-filter: none;
+	backdrop-filter: none;
+}
+
 /* Titles and interactive states share the same semantic accent tokens. */
 html .page-header__title,
 html .section-title__title,
