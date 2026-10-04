@@ -9,6 +9,11 @@ export const profileConfig: ProfileConfig = withUserConfig("profile", {
 	avatar: "/images/profile/avatar.webp",
 	name: "Alister",
 	bio: "代码、幻想与日常。",
-	// Add personal accounts here when their URLs are ready.
-	links: [],
+	links: [
+		{
+			name: "GitHub",
+			icon: "fa6-brands:github",
+			url: "https://github.com/asterShining",
+		},
+	],
 });
