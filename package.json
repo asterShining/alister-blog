@@ -11,7 +11,11 @@
     "astro": "astro",
     "test:e2e": "playwright test",
     "test:e2e:smoke": "playwright test --grep @smoke",
-    "test:e2e:production": "playwright test --grep @production"
+    "test:e2e:production": "playwright test --grep @production",
+    "release:patch": "node scripts/release.mjs patch",
+    "release:minor": "node scripts/release.mjs minor",
+    "release:major": "node scripts/release.mjs major",
+    "test:release": "node --test tests/release.test.mjs"
   },
   "dependencies": {
     "astro": "^7.3.5",

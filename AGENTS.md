@@ -10,7 +10,7 @@ Alister Blog is an Astro 7 and Svelte 5 static blog using `shirones` 0.1.x as an
 
 ## Branch and Development Workflow
 
-`main` is production; `dev` is the default development branch. Start each task with `git branch --show-current` and `git status`; switch to `dev` for ordinary development and preserve any user changes. Inspect the relevant local code before editing. Keep diffs small and reviewable.
+`main` is production; `dev` is the default development branch. Develop on `dev`, validate changes, then use a pull request from `dev` to `main` for production releases. Start each task with `git branch --show-current` and `git status`; switch to `dev` for ordinary development and preserve any user changes. Inspect the relevant local code before editing. Keep diffs small and reviewable.
 
 ## Theme Architecture
 
@@ -26,6 +26,8 @@ Use appropriately sized WebP assets. Avoid large-area strong `backdrop-filter`, 
 
 ## Git, CI/CD, and Completion
 
-Use descriptive Conventional Commits, for example `feat(theme): ...`, `fix(content): ...`, `perf(theme): ...`, `ci: ...`, or `docs: ...`. Never force-push, hard-reset, remove unknown branches/commits, or overwrite uncommitted work without explicit authorization. The GitHub Actions workflow defines `ci-build` and `e2e-smoke` for `dev` and `main`, plus `e2e-production` for `main` pushes and PRs targeting `main`; verify these jobs on GitHub before making them required Ruleset checks. Cloudflare Pages Git Integration handles CD, with `main` as the only production branch and `dev` for development/preview. Do not add a second Wrangler production deployment without a new requirement.
+Use descriptive Conventional Commits, for example `feat(theme): ...`, `fix(content): ...`, `perf(theme): ...`, `ci: ...`, or `docs: ...`. Never force-push, hard-reset, remove unknown branches/commits, or overwrite uncommitted work without explicit authorization. GitHub Actions is CI: `ci-build` and `e2e-smoke` run for `dev` and `main`, and `e2e-production` runs for production pushes and PRs targeting `main`; verify these jobs on GitHub before making them required Ruleset checks. Cloudflare Pages Git Integration is CD. `dev` is Development, `main` is Production, and the Production URL is `https://alistereno.top`. Do not add a second Wrangler production deployment without a new requirement.
+
+`package.json`'s `version` is the sole Alister Blog version source and follows stable SemVer: patch for fixes, minor for features, major for breaking or major architectural releases. Use `pnpm release:patch|minor|major` from a clean, synchronized `dev` branch. Release commits go through a `dev` → `main` PR and the existing CI gates. Because the PR uses squash merge, release tags must be created only from the resulting `main` production commit; never tag `dev`. GitHub Release metadata is created from `main` independently of Cloudflare Pages deployment, which remains Cloudflare's responsibility. After squash merge, synchronize `main` back into `dev` with a normal merge and push.
 
 Finish with changed files and purpose, validation commands and results, current branch and `git status`, known limitations, and the next useful step. For visual work include tested viewports; for performance work report any dev versus preview difference.

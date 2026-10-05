@@ -1,37 +1,41 @@
-# Shirone Blog
+# Alister Blog
 
-This site runs on [Shirone](https://github.com/LyraVoid/Shirone) — an
-anime-inspired, Material 3 Expressive blog theme for Astro, installed as the
-`shirones` npm package.
+Alister's personal blog built with Astro, Svelte, and the Shirone theme.
 
-## Commands
+**Production:** [https://alistereno.top](https://alistereno.top)
 
-```bash
-pnpm install   # install dependencies (run once after init)
-pnpm dev       # start the dev server at http://localhost:4321
-pnpm build     # static build → dist/
-pnpm preview   # preview the production build locally
-```
+## Stack
 
-## Project layout
+Astro 7 · Svelte 5 · Shirone 0.1.x · pnpm 12
 
-| Path | What it is |
-| --- | --- |
-| `shirones/config/` | site configuration — URL, title, theme colour, sidebar, fonts (TypeScript, fully typed) |
-| `shirones/config/data/` | friends, projects, skills, timeline, … |
-| `shirones/content/` | your posts, moments and other collections |
-| `src/components/` | drop a file here to override a theme component (mirrors the theme's `src/components/` tree) |
-| `src/layouts/` | …same for layouts |
-| `public/` | static assets (favicons, banners, images) |
-
-## Updating the theme
+## Local development
 
 ```bash
-npx shirones init            # report drift only
-npx shirones init --update   # add missing files without replacement
-npx shirones init --force    # replace the template after backing up the old copy
+pnpm install --frozen-lockfile
+pnpm dev                  # http://localhost:4321
+pnpm exec astro check     # validate Astro and TypeScript
+pnpm build                # create dist/
+pnpm preview              # preview the production build
+pnpm test:e2e:smoke       # run the smoke browser tests
+pnpm test:e2e             # run the full Playwright suite
 ```
 
-`--force` moves the previous `shirones/`, `public/` and project scaffold files
-to `.shirones-backup/` before copying the installed template. See the package
-documentation for the full configuration reference and component-override rules.
+Production E2E tests run against the local production preview; see
+[`docs/testing.md`](docs/testing.md) for details.
+
+## Branches and release
+
+- `dev` is the development branch; `main` is production.
+- Develop on `dev`, validate changes, then open a pull request from `dev` to `main`.
+- GitHub Actions provides CI. Cloudflare Pages Git Integration handles deployment from `main` to production; development branches use previews.
+
+Create a SemVer release from a clean `dev` checkout with `pnpm release:patch`,
+`pnpm release:minor`, or `pnpm release:major`. See
+[`docs/releasing.md`](docs/releasing.md) for the release flow.
+
+## Project structure
+
+- `shirones/config/` — site configuration
+- `shirones/content/` — Markdown/MDX posts and other content
+- `src/` — Alister Blog styles and overrides
+- `public/` — static assets

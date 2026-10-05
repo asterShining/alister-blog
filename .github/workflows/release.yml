@@ -1,0 +1,77 @@
+name: Release
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-main
+  cancel-in-progress: false
+
+jobs:
+  github-release:
+    name: github-release
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Check out production commit
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Read and validate blog version
+        id: version
+        shell: bash
+        env:
+          GITHUB_EVENT_BEFORE: ${{ github.event.before }}
+        run: |
+          VERSION="$(node -p "require('./package.json').version")"
+          if [[ ! "$VERSION" =~ ^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$ ]]; then
+            echo "package.json version must use stable SemVer x.y.z; found: $VERSION" >&2
+            exit 1
+          fi
+
+          PREVIOUS_VERSION=""
+          if [[ "$GITHUB_EVENT_BEFORE" != "0000000000000000000000000000000000000000" ]]; then
+            PREVIOUS_VERSION="$(git show "$GITHUB_EVENT_BEFORE:package.json" | node -e 'let source = ""; process.stdin.on("data", chunk => source += chunk); process.stdin.on("end", () => process.stdout.write(JSON.parse(source).version ?? ""));')"
+          fi
+          if [[ "$PREVIOUS_VERSION" == "$VERSION" ]]; then
+            echo "Alister Blog version is unchanged ($VERSION); skipping release creation."
+            echo "should_release=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          echo "tag=v$VERSION" >> "$GITHUB_OUTPUT"
+          echo "should_release=true" >> "$GITHUB_OUTPUT"
+
+      - name: Create GitHub Release if this version is new
+        if: steps.version.outputs.should_release == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RELEASE_TAG: ${{ steps.version.outputs.tag }}
+          RELEASE_SHA: ${{ github.sha }}
+        shell: bash
+        run: |
+          set +e
+          git ls-remote --exit-code --tags origin "refs/tags/$RELEASE_TAG" >/dev/null
+          tag_status=$?
+          set -e
+
+          if [[ $tag_status -eq 0 ]]; then
+            echo "Release $RELEASE_TAG already exists; nothing to do."
+            exit 0
+          fi
+          if [[ $tag_status -ne 2 ]]; then
+            echo "Unable to check remote tag $RELEASE_TAG (git ls-remote exit $tag_status)." >&2
+            exit "$tag_status"
+          fi
+
+          gh release create "$RELEASE_TAG" \
+            --target "$RELEASE_SHA" \
+            --title "Alister Blog $RELEASE_TAG" \
+            --generate-notes
