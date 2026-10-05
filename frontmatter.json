@@ -12,7 +12,7 @@
   "frontMatter.taxonomy.contentTypes": [
     {
       "name": "default",
-      "pageBundle": true,
+      "pageBundle": false,
       "previewPath": "'blog'",
       "filePrefix": null,
       "clearEmpty": true,
@@ -42,6 +42,11 @@
           "isPreviewImage": true
         },
         {
+          "title": "updated",
+          "name": "updated",
+          "type": "datetime"
+        },
+        {
           "title": "tags",
           "name": "tags",
           "type": "list"
@@ -54,12 +59,35 @@
         {
           "title": "draft",
           "name": "draft",
-          "type": "boolean"
+          "type": "boolean",
+          "default": true
         },
         {
-          "title": "language",
-          "name": "language",
+          "title": "pinned",
+          "name": "pinned",
+          "type": "boolean",
+          "default": false
+        },
+        {
+          "title": "comment",
+          "name": "comment",
+          "type": "boolean",
+          "default": true
+        },
+        {
+          "title": "lang",
+          "name": "lang",
           "type": "string"
+        },
+        {
+          "title": "series",
+          "name": "series",
+          "type": "string"
+        },
+        {
+          "title": "seriesOrder",
+          "name": "seriesOrder",
+          "type": "number"
         }
       ]
     }

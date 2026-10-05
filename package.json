@@ -8,7 +8,10 @@
     "dev": "astro dev",
     "build": "astro build",
     "preview": "astro preview",
-    "astro": "astro"
+    "astro": "astro",
+    "test:e2e": "playwright test",
+    "test:e2e:smoke": "playwright test --grep @smoke",
+    "test:e2e:production": "playwright test --grep @production"
   },
   "dependencies": {
     "astro": "^7.3.5",
@@ -23,5 +26,8 @@
     "@astrojs/check": "^0.9.10",
     "typescript": "^6.0.3",
     "shirones": "^0.1.5"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.63.0"
   }
 }
