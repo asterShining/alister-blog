@@ -140,6 +140,12 @@ async function createOrReusePullRequest(version, releaseType) {
   }
 
   console.log(`\nPR: ${pullRequestUrl}`);
+  const autoMergeAllowed = outputValue("gh", ["api", "repos/{owner}/{repo}", "--jq", ".allow_auto_merge"]);
+  if (autoMergeAllowed !== "true") {
+    console.log("Repository auto-merge is disabled; leaving the PR open. Merge manually after CI passes.");
+    return pullRequestUrl;
+  }
+
   const autoMerge = command("gh", ["pr", "merge", pullRequestUrl, "--auto", "--squash"], {
     capture: true,
     allowFailure: true,
