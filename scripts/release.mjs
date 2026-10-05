@@ -186,7 +186,7 @@ export async function runRelease(args) {
   try {
     await validateRelease();
     const status = outputValue("git", ["status", "--porcelain", "--untracked-files=all"]);
-    const expected = " M package.json";
+    const expected = "M package.json";
     if (status !== expected) {
       throw new Error(`Validation changed files beyond package.json; refusing to stage or commit them. Current status:\n${status}`);
     }
