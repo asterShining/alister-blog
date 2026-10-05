@@ -16,7 +16,7 @@ Run a release command from a clean `dev` branch. The script checks GitHub CLI au
 
 The script creates a `dev` → `main` pull request or reuses the existing open one. It requests auto squash-merge when GitHub allows it. If auto-merge is disabled, wait for `ci-build`, `e2e-smoke`, and `e2e-production` to pass, then merge the PR manually. Do not create a tag on `dev`.
 
-After squash merge, the `main` push triggers `.github/workflows/release.yml`. It validates the stable SemVer value, skips an already-tagged version, or creates `vX.Y.Z` at that exact `main` commit and a GitHub Release with generated notes. This tag placement matters because the squash commit on `main` has a different SHA from the release commit on `dev`.
+After squash merge, the `main` push triggers `.github/workflows/release.yml`. It acts only when the production commit changes the `package.json` version, validates the stable SemVer value, skips an already-tagged version, or creates `vX.Y.Z` at that exact `main` commit and a GitHub Release with generated notes. Documentation and infrastructure merges therefore do not accidentally create the initial `0.0.1` tag. This tag placement matters because the squash commit on `main` has a different SHA from the release commit on `dev`.
 
 Cloudflare Pages Git Integration independently deploys updates from `main` to [alistereno.top](https://alistereno.top); GitHub Actions does not deploy through Wrangler. After the squash merge, synchronize development history:
 
