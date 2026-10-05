@@ -13,7 +13,7 @@ html:root {
 
 html:root:not(.dark) {
 	color-scheme: light;
-	--theme-page: #e9f5ff;
+	--theme-page: #edf8ff;
 	--theme-surface: rgb(245 251 255 / 82%);
 	--theme-surface-soft: rgb(238 248 255 / 78%);
 	--theme-surface-raised: rgb(255 255 255 / 91%);
@@ -165,7 +165,7 @@ body::after {
 
 body::before {
 	background-image:
-		linear-gradient(180deg, rgb(236 247 255 / 16%), rgb(235 246 255 / 54%)),
+		linear-gradient(180deg, rgb(241 250 255 / 10%), rgb(241 250 255 / 42%)),
 		var(--theme-light-wallpaper);
 	opacity: 1;
 }
@@ -267,9 +267,9 @@ html.dark .banner-stage__media::after {
 html:not(.dark) .banner-stage__scrim {
 	background: linear-gradient(
 		180deg,
-		rgb(5 30 54 / 66%) 0%,
-		rgb(7 36 64 / 70%) 52%,
-		rgb(5 30 54 / 48%) 100%
+		rgb(5 30 54 / 28%) 0%,
+		rgb(7 36 64 / 34%) 52%,
+		rgb(5 30 54 / 22%) 100%
 	);
 	opacity: 1;
 }
@@ -281,7 +281,91 @@ html.dark .banner-stage__scrim {
 body[data-current-page="home"] .banner-stage__copy h1,
 body[data-current-page="home"] .banner-stage__copy p {
 	color: #fff;
-	text-shadow: 0 2px 14px rgb(4 19 39 / 50%);
+	text-shadow: 0 2px 14px rgb(4 19 39 / 58%), 0 1px 3px rgb(4 19 39 / 45%);
+}
+
+/* Small identity mark on the existing home-link brand. */
+.top-app-bar > div > a[href="/"]::before {
+	content: "";
+	display: block;
+	width: 22px;
+	height: 22px;
+	flex: 0 0 auto;
+	border: 1px solid color-mix(in srgb, var(--on-surface) 16%, transparent);
+	border-radius: 50%;
+	background: url("/images/profile/avatar.webp") center / cover no-repeat;
+	box-shadow: 0 1px 4px rgb(0 0 0 / 16%);
+}
+
+@media (max-width: 420px) {
+	.top-app-bar > div > a[href="/"]::before {
+		width: 20px;
+		height: 20px;
+	}
+}
+
+/* Keep pagination visually separate from the post list and footer. */
+.m3-blog-pagination {
+	margin-block: clamp(32px, 3vw, 48px) clamp(56px, 5vw, 80px);
+}
+
+/* Let short pages use the viewport height so pagination stays after the list
+ * and the complete footer settles at the page bottom without being fixed. */
+#main-layout {
+	min-height: calc(100vh - 5.5rem);
+}
+
+body[data-banner-layout="banner"] #main-layout {
+	min-height: calc(100vh - var(--banner-content-top));
+}
+
+#main-layout > .relative {
+	min-height: inherit;
+	display: flex;
+	flex-direction: column;
+}
+
+#main-grid {
+	flex: 1;
+	min-height: inherit;
+}
+
+#main-content-column {
+	display: flex;
+	flex-direction: column;
+}
+
+#swup-container,
+#content-wrapper {
+	display: flex;
+	flex: 1;
+	flex-direction: column;
+}
+
+#content-wrapper > .footer {
+	margin-top: auto;
+}
+
+@media (min-width: 1024px) {
+	html[data-wallpaper-mode="banner"] body[data-banner-has-desktop="true"] #main-layout {
+		min-height: calc(100vh - var(--banner-content-top));
+	}
+}
+
+@media (max-width: 1023.98px) {
+	html[data-wallpaper-mode="banner"] body[data-current-page="home"][data-banner-has-mobile="true"] #main-layout {
+		min-height: calc(100vh - var(--banner-content-top));
+	}
+
+	#main-grid {
+		display: flex;
+		flex-direction: column;
+	}
+
+	#main-content-column { order: 1; }
+	#main-grid > #sidebar { order: 2; }
+	#main-grid > #sidebar-secondary { order: 3; }
+	#main-grid > .footer { order: 4; margin-top: auto; }
 }
 
 /* Light glass on the existing sidebar and article cards; no layout changes. */
