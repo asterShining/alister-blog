@@ -1,24 +1,24 @@
 ---
 title: "Alister Blog，开始记录"
 published: 2026-10-04
-description: "Alister Blog 的第一篇文章，记录博客的技术基础、Starry 主题与之后的写作方向。"
+description: "个人空间从这里开始：记录日常、喜欢的作品、技术尝试和一路想到的事情。"
 image: "/images/posts/hello-alister-blog/cover.webp"
 tags:
   - Astro
   - Shirone
   - Blog
-category: "Web"
+category: "日常"
 draft: false
 ---
 
-Alister Blog 正式开始记录。
+Alister Blog 从这里开始。
 
-这个博客使用 **Astro 7** 与 **Shirone** 搭建，目前采用深蓝紫星空风格的 **Starry** 主题。这里会逐步整理技术学习、项目开发和日常生活中的想法。
+我想给喜欢的、想到的事情留一个位置：可以是日常片段、最近喜欢的动漫，也可以是学习和实践中记下的经验。博客使用 **Astro 7** 与 **Shirone** 搭建，现在穿着 **Starry** 的星夜外衣；技术是这里的一部分，但不会是全部。
 
 ## 接下来会写什么
 
-- Web 与 Linux 使用记录
-- 嵌入式、机器人和个人项目笔记
-- 动漫、幻想以及日常随笔
+- 日常生活里的片段与随想
+- 喜欢的动漫、幻想和其他作品
+- 技术学习、项目实践，以及值得分享的发现
 
-内容会继续以 Markdown 和 MDX 保存，让文章保持简单、可迁移，也为未来接入在线写作工具保留空间。
+分类会先从日常、随想、技术、动漫和分享几个方向开始，再随着内容慢慢调整。这里不急着成为某一种固定主题的站点，只希望把值得留下的东西好好记录下来。

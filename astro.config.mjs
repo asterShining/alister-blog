@@ -10,21 +10,21 @@ const starryTheme = {
   name: "alister-blog-starry-theme",
   hooks: {
     "astro:config:setup": ({ injectScript }) => {
-      // Shirone 0.1.5 defaults to auto. Keep its own theme preference and an
-      // inline root color floor even if Swup briefly swaps a stylesheet.
+      // Shirone 0.1.5 defaults to auto. Use Dark only when no preference exists;
+      // keep its native stored preference and an inline root color floor.
       injectScript(
         "head-inline",
         `(() => {
           const root = document.documentElement;
           try {
             if (localStorage.getItem("theme") === null) {
-              localStorage.setItem("theme", "light");
-              root.classList.remove("dark");
-              root.setAttribute("data-theme", "github-light");
+              localStorage.setItem("theme", "dark");
+              root.classList.add("dark");
+              root.setAttribute("data-theme", "github-dark");
             }
           } catch {}
           const syncRootColor = () => {
-            root.style.backgroundColor = root.classList.contains("dark") ? "#050b1d" : "#e9f5ff";
+            root.style.backgroundColor = root.classList.contains("dark") ? "#050b1d" : "#edf8ff";
           };
           syncRootColor();
           if (window.__alisterRootFallbackBound) return;

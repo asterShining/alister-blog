@@ -8,7 +8,7 @@ import { withUserConfig } from "@/utils/config-overlay.ts";
 export const profileConfig: ProfileConfig = withUserConfig("profile", {
 	avatar: "/images/profile/avatar.webp",
 	name: "Alister",
-	bio: "代码、幻想与日常。",
+	bio: "把喜欢的、想到的，都留在这里。",
 	links: [
 		{
 			name: "GitHub",

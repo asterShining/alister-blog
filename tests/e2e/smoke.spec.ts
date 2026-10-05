@@ -19,7 +19,7 @@ test("@smoke main content routes render from the production build", async ({ pag
 	await expect(page.locator(".page-header__subtitle")).toHaveText("友链正在整理中，欢迎稍后再来看看。");
 
 	await page.goto("/about/");
-	await expect(page.getByText("Summer Blue 与 Starry Night", { exact: false })).toBeVisible();
+	await expect(page.getByText("这里是 Alister 的个人空间", { exact: false })).toBeVisible();
 });
 
 test("@smoke Swup navigation keeps the selected dark skin", async ({ page }) => {
@@ -36,4 +36,25 @@ test("@smoke Swup navigation keeps the selected dark skin", async ({ page }) => 
 	expect(await page.evaluate(() => performance.timeOrigin)).toBe(documentStart);
 	await expect(page.locator("html")).toHaveClass(/dark/);
 	await expect(page.locator("body")).toHaveCSS("background-color", "rgb(5, 11, 29)");
+});
+
+test("@smoke defaults to dark and preserves a manually selected light mode", async ({ page }) => {
+	await page.goto("/");
+	await page.evaluate(() => localStorage.removeItem("theme"));
+	await page.reload();
+	await expect(page.locator("html")).toHaveClass(/dark/);
+
+	await page.locator("#scheme-switch").click();
+	await page.locator(".m3-menu-item").nth(0).click();
+	await expect(page.locator("html")).not.toHaveClass(/dark/);
+	await expect.poll(() => page.evaluate(() => localStorage.getItem("theme"))).toBe("light");
+
+	await page.reload();
+	await expect(page.locator("html")).not.toHaveClass(/dark/);
+
+	await page.locator("#scheme-switch").click();
+	await page.locator(".m3-menu-item").nth(1).click();
+	await expect(page.locator("html")).toHaveClass(/dark/);
+	await page.reload();
+	await expect(page.locator("html")).toHaveClass(/dark/);
 });
