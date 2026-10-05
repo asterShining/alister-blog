@@ -1,0 +1,60 @@
+name: Release
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-main
+  cancel-in-progress: false
+
+jobs:
+  github-release:
+    name: github-release
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Check out production commit
+        uses: actions/checkout@v4
+
+      - name: Read and validate blog version
+        id: version
+        shell: bash
+        run: |
+          VERSION="$(node -p "require('./package.json').version")"
+          if [[ ! "$VERSION" =~ ^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$ ]]; then
+            echo "package.json version must use stable SemVer x.y.z; found: $VERSION" >&2
+            exit 1
+          fi
+          echo "tag=v$VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Create GitHub Release if this version is new
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RELEASE_TAG: ${{ steps.version.outputs.tag }}
+          RELEASE_SHA: ${{ github.sha }}
+        shell: bash
+        run: |
+          set +e
+          git ls-remote --exit-code --tags origin "refs/tags/$RELEASE_TAG" >/dev/null
+          tag_status=$?
+          set -e
+
+          if [[ $tag_status -eq 0 ]]; then
+            echo "Release $RELEASE_TAG already exists; nothing to do."
+            exit 0
+          fi
+          if [[ $tag_status -ne 2 ]]; then
+            echo "Unable to check remote tag $RELEASE_TAG (git ls-remote exit $tag_status)." >&2
+            exit "$tag_status"
+          fi
+
+          gh release create "$RELEASE_TAG" \
+            --target "$RELEASE_SHA" \
+            --title "Alister Blog $RELEASE_TAG" \
+            --generate-notes

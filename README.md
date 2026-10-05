@@ -29,6 +29,10 @@ Production E2E tests run against the local production preview; see
 - Develop on `dev`, validate changes, then open a pull request from `dev` to `main`.
 - GitHub Actions provides CI. Cloudflare Pages Git Integration handles deployment from `main` to production; development branches use previews.
 
+Create a SemVer release from a clean `dev` checkout with `pnpm release:patch`,
+`pnpm release:minor`, or `pnpm release:major`. See
+[`docs/releasing.md`](docs/releasing.md) for the release flow.
+
 ## Project structure
 
 - `shirones/config/` — site configuration
