@@ -1,39 +1,8 @@
 import { test, expect } from '@playwright/test';
 import { readFileSync } from 'node:fs';
-import { spawn } from 'node:child_process';
-import { once } from 'node:events';
+import { apiFixture } from '../helpers/e2e-fixture.mjs';
 
 const article = '/posts/hello-alister-blog/';
-
-// Only the HTTP transport is intercepted. Responses use the real Functions,
-// migration SQL, cookie helper and SQLite constraints, not canned counts.
-async function apiFixture(page, options = {}) {
-  const child = spawn(process.execPath, ['tests/helpers/api-server.mjs'], { stdio: ['ignore', 'pipe', 'inherit'] });
-  const port = await new Promise((resolve, reject) => {
-    let output = '';
-    child.stdout.on('data', chunk => { output += chunk; if (output.includes('\n')) resolve(JSON.parse(output.split('\n')[0]).port); });
-    child.once('error', reject);
-    child.once('exit', code => reject(new Error(`API fixture exited: ${code}`)));
-  });
-  const base = `http://127.0.0.1:${port}`;
-  const requests = [];
-  await page.route('**/api/v1/**', async route => {
-    const req = route.request();
-    const url = new URL(req.url());
-    const [, resource, slug] = url.pathname.match(/\/api\/v1\/(views|reactions)\/([^/]+)$/) ?? [];
-    if (!resource) { await route.continue(); return; }
-    requests.push({ resource, slug, method: req.method() });
-    const failure = options.failure?.(resource, req.method());
-    if (failure) { await route.fulfill({ status: 503, json: { error: 'Unavailable' } }); return; }
-    if (resource === 'reactions' && req.method() === 'GET') await options.beforeReaction?.();
-    const response = await route.fetch({ url: `${base}${url.pathname}`, maxRetries: 0 });
-    await route.fulfill({ response });
-  });
-  return { requests,
-    count: async () => (await (await fetch(`${base}/__test/counts`)).json()).views,
-    close: async () => { const exited = once(child, 'exit'); child.kill('SIGTERM'); await exited; },
-  };
-}
 
 test('@smoke article views and Like use actual API logic and preserve cookie on reload', async ({ page }) => {
   let release;

@@ -1,0 +1,275 @@
+---
+import AccentBar from "@components/atoms/display/AccentBar.svelte";
+import Card from "@components/atoms/display/Card.svelte";
+import type { CommentContext } from "@/types/commentConfig";
+
+interface Props {
+  context: CommentContext;
+  postCommentEnabled?: boolean;
+  class?: string;
+}
+
+const { context, postCommentEnabled = true, class: className } = Astro.props;
+
+if (!postCommentEnabled) {
+  return null;
+}
+
+// Extract slug from context.key (e.g. "post:hello-alister-blog" -> "hello-alister-blog")
+const slug = context.key.replace(/^post:/, "");
+if (!slug || !/^[a-zA-Z0-9_-]{1,200}$/.test(slug)) {
+  return null;
+}
+
+const sitekey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY || "1x00000000000000000000AA";
+const apiBase = `${import.meta.env.BASE_URL}api/v1/`;
+---
+
+<section
+  id="comments"
+  aria-labelledby="comments-title"
+  class:list={["comment-section w-full mb-4", className]}
+  data-comment-section
+>
+  <Card color="var(--card-bg)" radius="l" class="p-6 md:p-8 w-full relative">
+    <alister-post-comments data-slug={slug} data-api-base={apiBase} data-sitekey={sitekey}>
+      <div class="flex items-center gap-3 mb-6 relative">
+        <AccentBar size="small" class="!inline-block" />
+        <h2 id="comments-title" class="text-xl md:text-2xl font-bold text-[var(--on-surface)] m-0">
+          <span data-comment-count>评论</span>
+        </h2>
+      </div>
+
+      <div data-comment-list class="comment-list" role="feed" aria-label="评论列表">
+        <p class="comment-section__empty">正在加载评论…</p>
+      </div>
+
+      <hr class="comment-divider" />
+
+      <div class="comment-form-container">
+        <h3 class="comment-form__title">留下评论</h3>
+        <form class="comment-form" onsubmit="return false;">
+          <div class="comment-form__field">
+            <label for={`comment-author-${slug}`} class="comment-form__label">昵称</label>
+            <input
+              id={`comment-author-${slug}`}
+              type="text"
+              data-comment-name
+              maxlength="32"
+              class="comment-form__input"
+              placeholder="你的昵称（1-32字符）"
+              autocomplete="name"
+            />
+          </div>
+          <div class="comment-form__field">
+            <label for={`comment-content-${slug}`} class="comment-form__label">评论</label>
+            <textarea
+              id={`comment-content-${slug}`}
+              data-comment-content
+              maxlength="1000"
+              rows="3"
+              class="comment-form__textarea"
+              placeholder="说点什么吧…（1-1000字符）"
+            ></textarea>
+          </div>
+          <div data-turnstile class="comment-turnstile"></div>
+          <div class="comment-form__actions">
+            <span data-comment-status class="comment-form__status" role="status" aria-live="polite"></span>
+            <button type="submit" data-comment-submit class="comment-submit-btn" disabled>
+              发表评论
+            </button>
+          </div>
+        </form>
+      </div>
+    </alister-post-comments>
+  </Card>
+</section>
+
+<script>
+  import "../../../scripts/post-comments";
+</script>
+
+<style>
+  alister-post-comments {
+    display: block;
+    width: 100%;
+  }
+
+  .comment-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
+  }
+
+  :global(.comment-section__empty) {
+    font-size: 0.9rem;
+    color: var(--on-surface-variant);
+    margin: 0.5rem 0;
+  }
+
+  :global(.comment-item) {
+    display: flex;
+    gap: 0.75rem;
+    padding: 0.75rem 1rem;
+    border-radius: 0.75rem;
+    background: var(--surface-container-low);
+    border: 1px solid var(--outline-variant);
+    transition: background-color 180ms, border-color 180ms;
+  }
+
+  :global(.comment-item__avatar) {
+    width: 2.25rem;
+    height: 2.25rem;
+    border-radius: 50%;
+    background: var(--primary-container);
+    color: var(--on-primary-container);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: 0.875rem;
+    flex-shrink: 0;
+    user-select: none;
+  }
+
+  :global(.comment-item__content) {
+    flex: 1;
+    min-width: 0;
+  }
+
+  :global(.comment-item__header) {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.5rem;
+    margin-bottom: 0.25rem;
+  }
+
+  :global(.comment-item__name) {
+    font-weight: 600;
+    font-size: 0.925rem;
+    color: var(--on-surface);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  :global(.comment-item__time) {
+    font-size: 0.75rem;
+    color: var(--on-surface-variant);
+    font-variant-numeric: tabular-nums;
+    flex-shrink: 0;
+  }
+
+  :global(.comment-item__body) {
+    font-size: 0.925rem;
+    line-height: 1.6;
+    color: var(--on-surface);
+    margin: 0;
+    word-break: break-word;
+    white-space: pre-wrap;
+  }
+
+  .comment-divider {
+    border: 0;
+    border-top: 1px solid var(--outline-variant);
+    margin: 1.5rem 0;
+  }
+
+  .comment-form-container {
+    margin-top: 0.5rem;
+  }
+
+  .comment-form__title {
+    font-size: 1.05rem;
+    font-weight: 600;
+    color: var(--on-surface);
+    margin: 0 0 1rem;
+  }
+
+  .comment-form__field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    margin-bottom: 0.85rem;
+  }
+
+  .comment-form__label {
+    font-size: 0.825rem;
+    font-weight: 500;
+    color: var(--on-surface-variant);
+  }
+
+  .comment-form__input,
+  .comment-form__textarea {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 0.5rem 0.75rem;
+    border-radius: 0.5rem;
+    border: 1px solid var(--outline-variant);
+    background: var(--surface-container-low);
+    color: var(--on-surface);
+    font: inherit;
+    font-size: 0.9rem;
+    transition: border-color 180ms, background-color 180ms;
+  }
+
+  .comment-form__input:focus,
+  .comment-form__textarea:focus {
+    outline: none;
+    border-color: var(--primary);
+    background: var(--surface-container);
+  }
+
+  .comment-turnstile {
+    margin: 0.75rem 0;
+    min-height: 65px;
+  }
+
+  .comment-form__actions {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+
+  .comment-form__status {
+    font-size: 0.825rem;
+    color: var(--on-surface-variant);
+    flex: 1;
+    min-height: 1.25rem;
+  }
+
+  .comment-submit-btn {
+    padding: 0.45rem 1.25rem;
+    border-radius: 999px;
+    font-weight: 600;
+    font-size: 0.875rem;
+    background: var(--primary);
+    color: var(--on-primary);
+    border: none;
+    cursor: pointer;
+    transition: opacity 180ms, background-color 180ms;
+    white-space: nowrap;
+    margin-left: auto;
+  }
+
+  .comment-submit-btn:disabled {
+    opacity: 0.5;
+    cursor: default;
+  }
+
+  .comment-submit-btn:hover:not(:disabled) {
+    opacity: 0.9;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .comment-form__input,
+    .comment-form__textarea,
+    .comment-submit-btn {
+      transition: none;
+    }
+  }
+</style>

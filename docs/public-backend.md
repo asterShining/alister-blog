@@ -10,11 +10,11 @@ Pages Functions lives in `functions/` and uses the existing `DB` D1 binding to `
 - `GET /api/v1/views/:slug`: `{ views }` total for the post.
 - `POST /api/v1/views/:slug`: records this visitor's view for the current fixed 30-minute wall-clock bucket, then returns `{ views }`.
 - `GET /api/v1/comments/:slug`: array of published `{ id, authorName, content, createdAt }`, oldest first.
-- `POST /api/v1/comments/:slug`: `{ authorName, content }`; returns the created comment with HTTP 201. Trimmed Unicode code-point limits: 1–32 and 1–1000.
+- `POST /api/v1/comments/:slug`: `{ authorName, content, turnstileToken }`; returns the created comment with HTTP 201. Trimmed Unicode code-point limits: 1–32 and 1–1000. Requires valid Turnstile token verified via Cloudflare siteverify (`functions/_lib/turnstile.ts`). Enforces anonymous visitor rate limiting: minimum 30 seconds interval and maximum 5 comments per 10 minutes per visitor, returning HTTP 429 when exceeded.
 
-Slugs must match `[a-zA-Z0-9_-]{1,200}`. Unsupported methods return JSON 405, invalid input JSON 400, internal failures generic JSON 500. Responses are not cached. A validated UUID visitor cookie is reused or generated with HttpOnly, Secure, SameSite=Lax, Path=/ and a one-year lifetime. No fingerprinting or visitor identifiers are returned in comment JSON.
+Slugs must match `[a-zA-Z0-9_-]{1,200}`. Unsupported methods return JSON 405, invalid input JSON 400, internal failures generic JSON 500. Responses are not cached. A validated UUID visitor cookie is reused or generated with HttpOnly, Secure, SameSite=Lax, Path=/ and a one-year lifetime. No fingerprinting, IP tracking, or visitor identifiers are returned in comment JSON.
 
-Comments are plain text: any future UI must use text rendering, never `innerHTML`. Anonymous cookies are not authentication or abuse prevention. Comments are published immediately and currently have no rate limiting, moderation UI, or frontend integration. Before adding a UI, plan abuse controls (such as Turnstile and rate limiting) and moderation.
+Comments are rendered strictly as plain text (`textContent` / Astro text escaping) and never through `innerHTML`. Anonymous cookies are not authentication. Comments default to `published` status.
 
 ## Local validation
 
@@ -25,22 +25,32 @@ pnpm exec astro check
 pnpm build
 pnpm test:release
 pnpm test:e2e:smoke
+pnpm test:e2e
 ```
 
-Backend tests execute the actual handlers and migration against Node 22's in-memory SQLite through a small D1-method adapter. They do not contact Cloudflare; they do not prove remote D1 deployment. Pages bundling can be checked without deploying with `pnpm dlx --allow-build esbuild --allow-build workerd wrangler pages functions build --outdir=/tmp/alister-functions-build`.
+Backend tests execute the actual handlers and migrations against Node 22's in-memory SQLite through a small D1-method adapter. They use mock fetch for Turnstile siteverify without internet dependency. Pages bundling can be checked without deploying with `pnpm dlx --allow-build esbuild --allow-build workerd wrangler pages functions build --outdir=/tmp/alister-functions-build`.
 
 ## Migration and deployment
 
-`migrations/0001_public_interactions.sql` creates reactions/comments; `migrations/0002_post_views.sql` creates `post_views` with a unique `(post_slug, visitor_id, view_bucket)` key and `idx_post_views_post_slug`. Both migrations are applied to the Production `alister-public` database. Do not modify an applied migration; create a new migration for schema changes. Do not apply remote migrations as part of automated validation. Any remote apply requires explicit user authorization, a confirmed target of `alister-public`, and post-apply schema plus migration metadata checks.
+- `migrations/0001_public_interactions.sql`: creates reactions/comments tables and indexes.
+- `migrations/0002_post_views.sql`: creates `post_views` table with unique constraint and index.
+- `migrations/0003_comment_rate_limit.sql`: creates `idx_comments_visitor_created` on `comments(visitor_id, created_at)` for rate limiting queries.
 
-The dashboard binding remains authoritative; binding `DB` does not create tables. Do not re-run raw `CREATE TABLE` SQL against existing tables. Follow `dev → CI → PR → main` and verify deployed health and interaction routes. Cloudflare Pages Git Integration deploys Functions; GitHub Actions does not deploy them.
+Migrations 0001 and 0002 are applied to Production `alister-public`. Migration 0003 is currently local only. Do not modify an applied migration; create a new migration for schema changes. Do not apply remote migrations without explicit user authorization, a confirmed target of `alister-public`, and post-apply schema checks.
+
+The dashboard binding remains authoritative; binding `DB` does not create tables. Follow `dev → CI → PR → main` and verify deployed health, interaction, and comment routes. Cloudflare Pages Git Integration deploys Functions; GitHub Actions does not deploy them.
 
 ## Phase 2A: article views and Like
 
 The unique key and parameterized `INSERT OR IGNORE` deduplicate concurrent requests within each fixed 30-minute bucket (`floor(Date.now() / 1800000)`). This is a wall-clock bucket, not a rolling 30 minutes after first visit; crossing a bucket boundary can count again. No IP or fingerprint is stored.
 
-The local `molecules/PostMeta` override adds a small article-only interaction bar, using the stable content ID for alias/permalink URLs. Flat IDs matching the API slug rule are supported; unsupported nested IDs omit the bar. Views POST completes before reactions GET so first-visit requests share one HttpOnly cookie. There are exactly two initial API requests per article DOM insertion; no list-page requests or polling. Like uses the existing reaction API (`like` / `null`); `dislike` stays API-compatible and appears unselected.
+The local `molecules/PostMeta` override adds a small article-only interaction bar, using the stable content ID for alias/permalink URLs. Views POST completes before reactions GET so first-visit requests share one HttpOnly cookie.
 
-A registered custom element follows DOM insertion/removal through Swup, aborts obsolete requests and removes click handlers on disconnect. Failed requests leave readable articles and retryable Like controls. Comments remain API-only. Browser interaction tests intercept only HTTP transport and run the real handlers against migrated SQLite; local Wrangler/D1 HTTP checks validate the Cloudflare runtime separately.
+## Phase 2B: Comments UI, Turnstile, and Rate Limiting
 
-`pnpm dev` and `pnpm preview` serve the Astro frontend only; they do not execute Cloudflare Pages Functions or D1. A dynamic API failure there is not evidence of a Production API failure. Preview and Production have separate environment bindings; verify that Preview has `DB` configured before testing its Functions. The Production binding has been validated; Preview D1 availability was previously found missing and must be rechecked in Cloudflare settings.
+- **Server Turnstile Verification**: `functions/_lib/turnstile.ts` validates tokens with Cloudflare's `siteverify` endpoint without sending client IP addresses (`remoteip`). Enforces `action = comment_submit` and `hostname = alistereno.top` in production while allowing local test origins during development. Secrets (`TURNSTILE_SECRET`) are read exclusively from environment variables and never returned to clients or logged.
+- **Anonymous Visitor Rate Limiting**: Queries `comments` table via `idx_comments_visitor_created` to enforce a 30-second cooldown between comments and a 10-minute cap of 5 comments per `alister_visitor_id`. Returns HTTP 429 (`{ "error": "Too many comments" }`) on violation without leaking visitor IDs.
+- **Frontend Comments UI**: `src/components/organisms/comment/CommentSection.astro` overrides Shirone's default comment section, presenting comment count, plain-text comment list, first-letter avatar placeholder, and submission form. Styled using Summer Blue Light and Starry Night Dark design tokens with lightweight glass/surface containers.
+- **Client Lifecycle & Swup**: `src/scripts/post-comments.ts` manages custom element `alister-post-comments`. The Turnstile explicit API script is loaded at most once; widgets are rendered per DOM mount and cleaned up on unmount. Nicknames are optionally remembered in `localStorage` under `alister_comment_author`. Form submissions clear comment content, reset Turnstile tokens, and append new comments immediately.
+- **Feature Inactivity**: If an article frontmatter defines `comment: false`, the comments section, comments GET request, and Turnstile script are completely omitted.
+- **Performance**: Article page loads add at most 1 × comments GET request. No polling is used.
