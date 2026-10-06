@@ -14,7 +14,7 @@
 - Formal Alister content and removal of Shirone demo posts.
 - GitHub Actions CI, SemVer release commands, and main-based GitHub Release workflow.
 - Public Cloudflare Pages Functions for health, reactions, views, and comments.
-- D1 migrations `0001_public_interactions.sql`, `0002_post_views.sql`, and `0003_comment_rate_limit.sql` (0001 and 0002 applied to production; 0003 local-only).
+- D1 migrations `0001_public_interactions.sql`, `0002_post_views.sql`, and `0003_comment_rate_limit.sql` (all applied to production `alister-public`).
 - Article page Views and Like UI; current UI intentionally exposes Like only.
 - Article page Comments UI (Phase 2B):
   - Cloudflare Turnstile bot protection with server-side siteverify (`functions/_lib/turnstile.ts`).
@@ -34,7 +34,7 @@
 - `GET` / `POST /api/v1/views/:slug`
 - `GET` / `POST /api/v1/comments/:slug` (POST requires Turnstile token, enforces rate limiting, returns 201)
 
-Production D1 has migrations 0001 and 0002 applied. Article pages make at most one Views `POST`, one reactions `GET`, and one comments `GET` per DOM insertion; list pages do not request interaction or comment data.
+Production D1 has migrations 0001, 0002, and 0003 applied. Article pages make at most one Views `POST`, one reactions `GET`, and one comments `GET` per DOM insertion; list pages do not request interaction or comment data.
 
 ## Database and Visitor Semantics
 
@@ -52,13 +52,9 @@ The separate JD Cloud private/Admin backend uses Fastify and PostgreSQL and has 
 
 - `shirones/content/moments/` is empty while Moments is enabled; the empty collection can still produce an Astro warning. The Series warning has a narrow project-level filter; schema/frontmatter errors remain visible.
 - Earlier Pages Preview validation found the Preview environment lacked the `DB` D1 binding, while Production binding worked. Cloudflare environment settings are outside this repository; verify the current Preview binding before testing Preview Functions.
-- Migration `0003_comment_rate_limit.sql` has NOT been applied to remote production yet. It requires explicit user authorization before running `wrangler d1 migrations apply ... --remote`.
-- Production Cloudflare Pages Functions require `TURNSTILE_SECRET` and frontend build requires `PUBLIC_TURNSTILE_SITE_KEY` once real Turnstile credentials are provisioned in Cloudflare dashboard.
 - Astro `dev` and `astro preview` serve the frontend but do not provide the deployed Pages Functions + D1 runtime. Use local Wrangler/Pages testing for Functions behavior.
 
 ## Next Reasonable Directions
 
-- Apply migration 0003 to remote production D1 upon user authorization.
-- Configure production Cloudflare Turnstile credentials in Cloudflare dashboard (`PUBLIC_TURNSTILE_SITE_KEY` and `TURNSTILE_SECRET`).
 - Add personal articles and continue maintaining the existing friend list.
 - Build the private Admin/CMS workflow on the separate JD Cloud service for comment moderation.
