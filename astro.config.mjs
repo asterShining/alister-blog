@@ -6,6 +6,11 @@ const starryThemeStyles = new URL(
   import.meta.url,
 ).pathname;
 
+const postCommentsScript = new URL(
+  "./src/scripts/post-comments.ts",
+  import.meta.url,
+).pathname;
+
 const starryTheme = {
   name: "alister-blog-starry-theme",
   hooks: {
@@ -35,6 +40,10 @@ const starryTheme = {
       injectScript(
         "page-ssr",
         `import ${JSON.stringify(starryThemeStyles)};`,
+      );
+      injectScript(
+        "page",
+        `import ${JSON.stringify(postCommentsScript)};`,
       );
     },
   },

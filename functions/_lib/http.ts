@@ -1,4 +1,4 @@
-export interface Env { DB: D1Database }
+export interface Env { DB: D1Database; TURNSTILE_SECRET: string }
 
 export function json(value: unknown, status = 200, cookie?: string): Response {
   const headers = new Headers({ 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' });

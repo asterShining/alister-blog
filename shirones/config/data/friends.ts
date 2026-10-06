@@ -12,10 +12,31 @@ export interface FriendItem {
 	desc: string;
 	siteurl: string;
 	tags: string[];
+	/** Feed metadata; Shirone 0.1.5 cards do not render RSS links. */
+	rss?: string;
 }
 
 // 友情链接数据
-export const friendsData: FriendItem[] = [];
+export const friendsData: FriendItem[] = [
+	{
+		id: 1,
+		title: "Neomelt's Blog",
+		imgurl: "https://www.neomelt.cloud/head.jpg",
+		desc: "Keep looking, don't settle",
+		siteurl: "https://neomelt.cloud",
+		tags: [],
+		rss: "https://www.neomelt.cloud/rss.xml",
+	},
+	{
+		id: 2,
+		title: "evil0knight's Blog",
+		imgurl: "https://avatars.githubusercontent.com/evil0knight",
+		desc: "嵌入式软件,笔记博客,欢迎交流",
+		siteurl: "https://evil0knight.github.io/quartz/",
+		tags: [],
+		rss: "https://evil0knight.github.io/quartz/index.xml",
+	},
+];
 
 // 获取所有友情链接数据（稳定顺序，测试可复现）
 export function getFriendsList(): FriendItem[] {
