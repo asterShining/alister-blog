@@ -44,6 +44,11 @@ const starryTheme = {
 // `shirones/config/` so they stay typed and version-controlled with your
 // content. This file only wires the theme in.
 export default defineConfig({
+  // Keeps the dev/build log free of the empty-`series` warning that shirones
+  // still emits while Series is disabled; see `src/logger.mjs`.
+  logger: {
+    entrypoint: "./src/logger.mjs",
+  },
   integrations: [
     starryTheme,
     shirones({

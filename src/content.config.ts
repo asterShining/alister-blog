@@ -25,8 +25,46 @@ const spec = defineCollection({
 	schema: specSchema,
 });
 
+const seriesGlob = glob({
+	base: "./shirones/content/series",
+	pattern: "**/*.md",
+});
+
+type SeriesLoaderLogger = Parameters<typeof seriesGlob.load>[0]["logger"];
+
+/**
+ * Series is off (`shirones/config/seriesConfig.ts` → `enable: false`) and
+ * `shirones/content/series/` stays empty until it is turned back on, so Astro's
+ * glob loader warning "No files found matching …" is expected noise on every
+ * sync. Drop exactly that notice; anything else (missing base directory, bad
+ * frontmatter, unreadable file) still surfaces. The loader stays a plain glob,
+ * so re-enabling Series needs no change here beyond adding content.
+ */
+function quietEmptyPatternNotice(logger: SeriesLoaderLogger): SeriesLoaderLogger {
+	const notice = "No files found matching";
+	return new Proxy(logger, {
+		get(target, property, receiver) {
+			const value: unknown = Reflect.get(target, property, receiver);
+			if (property !== "warn" || typeof value !== "function") {
+				return typeof value === "function" ? value.bind(target) : value;
+			}
+			const warn = value as (message: string) => void;
+			return (message: string) => {
+				if (!message.startsWith(notice)) warn.call(target, message);
+			};
+		},
+	});
+}
+
 const series = defineCollection({
-	loader: glob({ base: "./shirones/content/series", pattern: "**/*.md" }),
+	loader: {
+		name: "series-glob",
+		load: (context: Parameters<typeof seriesGlob.load>[0]) =>
+			seriesGlob.load({
+				...context,
+				logger: quietEmptyPatternNotice(context.logger),
+			}),
+	},
 	schema: seriesSchema,
 });
 
