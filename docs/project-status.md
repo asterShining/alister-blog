@@ -43,20 +43,43 @@
   - `public/_routes.json` configured for `/community/*` Functions handling while preserving static caching for `/community/` and `/community/post/`.
   - Comprehensive verification: unit tests (`tests/community.test.mjs`), D1 backend tests (`tests/community-backend.test.mjs`), Playwright E2E coverage (`tests/e2e/community.spec.mjs`), and smoke tests.
 
-## Community First Real Post Production Phase — PASS (2026-10-07)
+## Community First Real Post Backend Production — PASS; Frontend UNVERIFIED (2026-10-07)
 
-- Community: **Production Enabled**; first post: `community-start` — “社区，也从这里开始”.
+- Community backend Production: **PASS**; first post: `community-start` — “社区，也从这里开始”. Community frontend Production: **UNVERIFIED** (see Recent Handoff).
 - Authoritative: JD PostgreSQL; Public Replica: Cloudflare D1 `alister-public`.
 - Publishing: **manual private Operator CLI + manual Publisher sync**. Create is draft-first; Production writes require `--confirm-production`. There is no automatic scheduler.
 - API PR [#3](https://github.com/asterShining/alister-api/pull/3), operator commit `5542c18488118ed2fe783b5eae2655924dc1821a`; API main/JD deployed HEAD `4a6f48e6a8ee7b2feee48db3c208a471805be914`.
-- Blog delivery PR [#11](https://github.com/asterShining/alister-blog/pull/11), Production main `7f68d17a72d4597fca4fc0127356cc7e32ccca58`. Enabled rebuild deployment: `a7c6546c-c2a3-4c53-b95c-19efa6c898da` (success, same main commit).
-- `COMMUNITY_ENABLE=true` is a Production **plain-text build-time** variable; local defaults and Preview configuration were preserved.
+- Blog delivery PR [#11](https://github.com/asterShining/alister-blog/pull/11), Production main `7f68d17a72d4597fca4fc0127356cc7e32ccca58`. A rebuild deployment was reported as `a7c6546c-c2a3-4c53-b95c-19efa6c898da` (success, same main commit), but its Astro build-time environment is not verified.
+- The previous rollout report recorded `COMMUNITY_ENABLE=true` as a Production **plain-text build-time** variable; this does not prove it was present in that Astro build. The owner later saw no visible Community changes. Local defaults and Preview configuration were reported preserved.
 - Production Empty Pipeline completed previously. This phase verified draft isolation, 1-insert dry-run/live sync, second dry-run 0 diff, and one valid advanced checkpoint.
 - PostgreSQL Community posts: 0 → 1, published/public/Markdown. D1 Community posts: 0 → 1; images: 0 → 0. No extra Community content was created.
 - Public API feed total=1, detail correct, missing detail 404; no internal field leakage.
-- Production UI: feed/detail/navigation/Markdown/author/date/return navigation verified; Summer Blue and Starry Night at 390/768/1440px, no horizontal overflow or hydration errors.
+- The previous rollout report stated that UI/feed/detail/navigation and responsive checks passed, but the owner later observed no visible Community changes. Treat frontend enablement and UI acceptance as **UNVERIFIED** until checked against the live site and build evidence.
 - Article Views/Like, Comments GET/UI, Turnstile widget, Friends, About, and theme persistence verified. No comment submitted during acceptance.
 - Images/R2/media base, Community Likes/Comments, multi-user posting, Admin UI, and automatic cron sync remain **not enabled**. Further capabilities require a separately defined and authorized phase.
+
+## Recent Handoff (2026-10-07)
+
+### Last completed
+
+- Community Production Empty Pipeline: **PASS** at Blog Production main `7f68d17a72d4597fca4fc0127356cc7e32ccca58`. D1 migration `0004` was applied; before the first post, `community_posts` and `community_post_images` were both empty. Production Publisher dry-run, empty live reconciliation, checkpoint validation, and second zero-diff dry-run passed. Community was disabled at that point.
+- Community First Real Post backend pipeline: **PASS**. The API Operator CLI was merged in API PR #3 (`5542c18488118ed2fe783b5eae2655924dc1821a`); API main and JD production are at `4a6f48e6a8ee7b2feee48db3c208a471805be914`, with health verified HTTP 200/database connected.
+- `community-start` (“社区，也从这里开始”) was created draft-first, verified isolated from D1/public detail, then explicitly published. Publisher dry-run/live sync each showed one insert, zero updates/deletes/images; the next dry-run was zero diff and checkpoint advanced. Production D1 now has one Community post and zero images.
+- Public feed returned 200/total 1; detail returned 200 with title, author `Alister`, and `images: []`; missing detail remained 404 `POST_NOT_FOUND`. No internal-field leakage was found.
+
+### Current state and unresolved discrepancy
+
+- Community backend Production: **PASS**.
+- First real post: **PASS** (`community-start`).
+- Public API: **PASS**.
+- Community frontend Production: **UNVERIFIED**. A previous report recorded `COMMUNITY_ENABLE=true` (plain text) and successful Pages deployment `a7c6546c-c2a3-4c53-b95c-19efa6c898da` for main `7f68d17a72d4597fca4fc0127356cc7e32ccca58`; no `COMMUNITY_MEDIA_BASE_URL` was set. The site owner later observed no visible Community changes. Those deployment records do not prove the build-time variable reached Astro.
+- Blog dev includes documentation commit `4098406a34173300168fc4dba5d1589a9796ade1` (pushed; CI passed), while Production main remains `7f68d17a72d4597fca4fc0127356cc7e32ccca58`. Do not automatically publish handoff-only documentation.
+
+### Next Agent Task: Community Production Enable Verification
+
+Verify the live `/community/` and navigation, confirm feed/detail APIs, inspect Cloudflare Production variable and deployment/build evidence, and establish whether `COMMUNITY_ENABLE=true` entered the Astro build. Compare same-commit local builds with and without the variable if useful. Only record frontend `ENABLED` after the live navigation, feed, and detail are confirmed. Do not redo first-post creation, PostgreSQL publication, Publisher live sync, D1 migration, or D1 insert.
+
+R2, Community images/upload, new Community Likes/Comments, multi-user posting, Admin UI, and automatic sync remain out of scope.
 
 ## Public Backend
 
@@ -67,7 +90,7 @@
 - `GET /api/v1/community/posts` (Edge read replica query)
 - `GET /api/v1/community/posts/:slug` (Edge read replica query for public/unlisted)
 
-Production D1 has migrations 0001–0004 applied. Community is Production Enabled with read-only feed/detail APIs and UI. Article pages make at most one Views `POST`, one reactions `GET`, and one comments `GET` per DOM insertion; list pages do not request interaction or comment data. Community pages perform client-side runtime fetch only when enabled.
+Production D1 has migrations 0001–0004 applied. Community backend feed/detail APIs are live and read-only; the frontend enable state is **UNVERIFIED**. Article pages make at most one Views `POST`, one reactions `GET`, and one comments `GET` per DOM insertion; list pages do not request interaction or comment data. Community pages perform client-side runtime fetch only when enabled.
 
 ## Database and Visitor Semantics
 
