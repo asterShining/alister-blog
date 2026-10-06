@@ -45,6 +45,12 @@ jobs:
       - name: Check Astro and TypeScript
         run: pnpm exec astro check
 
+      - name: Check Pages Functions types
+        run: pnpm typecheck:functions
+
+      - name: Test public interaction API
+        run: pnpm test:backend
+
       - name: Build site
         run: pnpm build
 
