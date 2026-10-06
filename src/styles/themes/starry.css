@@ -275,6 +275,32 @@ html.dark .banner-stage__media::after {
 	opacity: var(--banner-dim-opacity);
 }
 
+/* ---------------------------------------------------------------------------
+ * Navigation performance
+ *
+ * The timing rules below only take effect once Swup is driving in-site
+ * navigation (`html.swup-enabled` is added by Swup after the initial page load
+ * finishes). The first paint keeps the theme's original timing.
+ * ------------------------------------------------------------------------- */
+
+/* Swup awaits the `transition-swup-fade` fade on the container before it
+ * reports a visit as finished, so its duration is added to every navigation
+ * (measured ~185 ms on Production). The initial load still uses the theme's
+ * 200 ms; in-site visits settle in 140 ms, which stays visibly soft but returns
+ * control sooner. */
+html.swup-enabled.is-changing main#swup-container.transition-swup-fade {
+	transition-duration: 140ms;
+}
+
+/* The content wrapper is re-created on every visit, so its first-paint entrance
+ * animation replays each time and holds the body copy at partial opacity for
+ * 300 ms after the swap. Shortened for visits only, and never shorter than the
+ * container fade it overlaps. */
+html.swup-enabled #content-wrapper.onload-animation {
+	animation-duration: 160ms;
+	animation-delay: 0ms;
+}
+
 /* White Hero and Navbar text needs a dependable floor over bright clouds. */
 html:not(.dark) .banner-stage__scrim {
 	background: linear-gradient(
