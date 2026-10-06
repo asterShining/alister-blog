@@ -12,10 +12,16 @@ const turnstileHelper = ts.transpileModule(readFileSync('functions/_lib/turnstil
 }).outputText;
 const turnstileHelperUrl = `data:text/javascript;base64,${Buffer.from(turnstileHelper).toString('base64')}`;
 
+const mediaHelper = ts.transpileModule(readFileSync('functions/_lib/community-media.ts', 'utf8'), {
+  compilerOptions: { module: ts.ModuleKind.ESNext },
+}).outputText;
+const mediaHelperUrl = `data:text/javascript;base64,${Buffer.from(mediaHelper).toString('base64')}`;
+
 export async function handler(path) {
   const source = ts.transpileModule(readFileSync(path, 'utf8'), {
     compilerOptions: { module: ts.ModuleKind.ESNext },
   }).outputText
+    .replace(/from ['"][^'"]*_lib\/community-media['"]/g, `from '${mediaHelperUrl}'`)
     .replace(/from ['"][^'"]*_lib\/http['"]/g, `from '${httpHelperUrl}'`)
     .replace(/from ['"][^'"]*_lib\/turnstile['"]/g, `from '${turnstileHelperUrl}'`);
   return (await import(`data:text/javascript;base64,${Buffer.from(source).toString('base64')}`)).onRequest;
@@ -23,7 +29,7 @@ export async function handler(path) {
 
 export function database() {
   const sql = new DatabaseSync(':memory:');
-  for (const migration of ['0001_public_interactions.sql', '0002_post_views.sql', '0003_comment_rate_limit.sql']) {
+  for (const migration of ['0001_public_interactions.sql', '0002_post_views.sql', '0003_comment_rate_limit.sql', '0004_community_public.sql']) {
     sql.exec(readFileSync(`migrations/${migration}`, 'utf8'));
   }
   return {
@@ -59,12 +65,13 @@ const defaultFetch = async (url, options) => {
   return fetch(url, options);
 };
 
-export function call(fn, DB, method = 'GET', body, cookie, slug = 'hello-alister-blog', envOverrides = {}) {
+export function call(fn, DB, method = 'GET', body, cookie, slug = 'hello-alister-blog', envOverrides = {}, urlOverride) {
   const headers = cookie ? { Cookie: cookie } : {};
+  const requestUrl = urlOverride || `https://example.test/api/v1/test/${slug}`;
   return fn({
     env: { DB, TURNSTILE_SECRET: '1x0000000000000000000000000000000AA', fetch: defaultFetch, ...envOverrides },
     params: { slug },
-    request: new Request(`https://example.test/api/v1/test/${slug}`, {
+    request: new Request(requestUrl, {
       method,
       headers,
       ...(body === undefined ? {} : { body: typeof body === 'string' ? body : JSON.stringify(body) }),

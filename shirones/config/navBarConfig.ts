@@ -3,6 +3,7 @@ import { i18n } from "@i18n/translation";
 import { aboutConfig } from "@/config/aboutConfig";
 import { albumsConfig } from "@/config/albumsConfig";
 import { animeConfig } from "@/config/animeConfig";
+import { communityConfig } from "./communityConfig.ts";
 import { compassConfig } from "@/config/compassConfig";
 import { devicesConfig } from "@/config/devicesConfig";
 import { friendsConfig } from "@/config/friendsConfig";
@@ -122,6 +123,12 @@ export const LinkPresets: Record<string, NavBarLink> = {
 		icon: "material-symbols:auto-stories-outline-rounded",
 		pageKey: "series",
 	},
+	Community: {
+		name: communityConfig.title || "社区",
+		url: "/community/",
+		icon: "material-symbols:forum-outline-rounded",
+		pageKey: "community",
+	},
 	About: {
 		name: i18n(I18nKey.about),
 		url: "/about/",
@@ -143,6 +150,7 @@ const defaultNavBarConfig: NavBarConfig = {
 		// Shirone's archive route is the available article index.
 		LinkPresets.Archive,
 		LinkPresets.Tags,
+		LinkPresets.Community,
 		LinkPresets.Anime,
 		LinkPresets.Friends,
 		LinkPresets.About,
@@ -166,6 +174,7 @@ function resolveName(name: string): string {
  * 关闭判定只看配置，与导航结构无关，因此默认结构与内容仓声明式条目共用同一张表。
  */
 const unavailableFeatureRoutes: ReadonlySet<string> = new Set([
+	...(communityConfig.enable ? [] : ["/community"]),
 	...(friendsConfig.enable ? [] : ["/friends"]),
 	...(momentsConfig.enable ? [] : ["/moments"]),
 	...(animeConfig.enable ? [] : ["/anime"]),

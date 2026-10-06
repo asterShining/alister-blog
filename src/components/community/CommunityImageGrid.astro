@@ -1,0 +1,123 @@
+---
+import type { CommunityImage } from "../../lib/community/types.ts";
+
+interface Props {
+  images?: CommunityImage[];
+  class?: string;
+}
+
+const { images = [], class: className = "" } = Astro.props;
+const count = images.length;
+---
+
+{count > 0 && (
+  <div class:list={["community-image-grid-wrapper mt-3", className]}>
+    {count === 1 && (
+      <div class="community-image-grid community-image-grid--1 max-w-lg">
+        <a
+          href={images[0].url}
+          target="_blank"
+          rel="noopener noreferrer"
+          class="community-image-link block overflow-hidden rounded-[var(--shape-corner-m)] border border-[var(--outline-variant)] group"
+          aria-label={images[0].alt || "查看图片"}
+        >
+          <img
+            src={images[0].url}
+            alt={images[0].alt || ""}
+            loading="lazy"
+            decoding="async"
+            class="community-img w-full max-h-[420px] object-cover transition-transform duration-300 group-hover:scale-[1.02]"
+          />
+        </a>
+      </div>
+    )}
+
+    {count === 2 && (
+      <div class="community-image-grid community-image-grid--2 grid grid-cols-2 gap-2 sm:gap-3 max-w-xl">
+        {images.map((img, idx) => (
+          <a
+            href={img.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            class="community-image-link block overflow-hidden rounded-[var(--shape-corner-m)] border border-[var(--outline-variant)] aspect-[4/3] group"
+            aria-label={img.alt || `查看图片 ${idx + 1}`}
+          >
+            <img
+              src={img.url}
+              alt={img.alt || ""}
+              loading="lazy"
+              decoding="async"
+              class="community-img w-full h-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
+            />
+          </a>
+        ))}
+      </div>
+    )}
+
+    {count === 3 && (
+      <div class="community-image-grid community-image-grid--3 grid grid-cols-3 gap-2 sm:gap-3 max-w-2xl">
+        {images.map((img, idx) => (
+          <a
+            href={img.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            class="community-image-link block overflow-hidden rounded-[var(--shape-corner-m)] border border-[var(--outline-variant)] aspect-square group"
+            aria-label={img.alt || `查看图片 ${idx + 1}`}
+          >
+            <img
+              src={img.url}
+              alt={img.alt || ""}
+              loading="lazy"
+              decoding="async"
+              class="community-img w-full h-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
+            />
+          </a>
+        ))}
+      </div>
+    )}
+
+    {count === 4 && (
+      <div class="community-image-grid community-image-grid--4 grid grid-cols-2 gap-2 sm:gap-3 max-w-lg">
+        {images.map((img, idx) => (
+          <a
+            href={img.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            class="community-image-link block overflow-hidden rounded-[var(--shape-corner-m)] border border-[var(--outline-variant)] aspect-square group"
+            aria-label={img.alt || `查看图片 ${idx + 1}`}
+          >
+            <img
+              src={img.url}
+              alt={img.alt || ""}
+              loading="lazy"
+              decoding="async"
+              class="community-img w-full h-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
+            />
+          </a>
+        ))}
+      </div>
+    )}
+
+    {count > 4 && (
+      <div class="community-image-grid community-image-grid--many grid grid-cols-3 gap-2 sm:gap-3 max-w-2xl">
+        {images.map((img, idx) => (
+          <a
+            href={img.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            class="community-image-link block overflow-hidden rounded-[var(--shape-corner-m)] border border-[var(--outline-variant)] aspect-square group"
+            aria-label={img.alt || `查看图片 ${idx + 1}`}
+          >
+            <img
+              src={img.url}
+              alt={img.alt || ""}
+              loading="lazy"
+              decoding="async"
+              class="community-img w-full h-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
+            />
+          </a>
+        ))}
+      </div>
+    )}
+  </div>
+)}

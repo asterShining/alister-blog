@@ -1,0 +1,24 @@
+---
+import type { CommunityPost } from "../../lib/community/types.ts";
+import CommunityPostCard from "./CommunityPostCard.astro";
+import CommunityEmptyState from "./CommunityEmptyState.astro";
+
+interface Props {
+  posts: CommunityPost[];
+  class?: string;
+}
+
+const { posts = [], class: className = "" } = Astro.props;
+---
+
+<div class:list={["community-feed-container", className]}>
+  {posts.length === 0 ? (
+    <CommunityEmptyState />
+  ) : (
+    <div class="community-feed flex flex-col gap-4 sm:gap-6">
+      {posts.map((post) => (
+        <CommunityPostCard post={post} />
+      ))}
+    </div>
+  )}
+</div>

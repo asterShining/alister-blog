@@ -1,0 +1,27 @@
+---
+import MainGridLayout from "@layouts/MainGridLayout.astro";
+import { communityConfig } from "@config/communityConfig.ts";
+import CommunityFeedApp from "../../components/community/CommunityFeedApp.svelte";
+
+if (!communityConfig.enable) {
+  return Astro.redirect("/404/");
+}
+
+const pageTitle = communityConfig.title || "社区";
+const pageDescription = communityConfig.description;
+---
+
+<MainGridLayout title={pageTitle} description={pageDescription}>
+  <div class="community-page max-w-3xl mx-auto py-2">
+    <div class="community-page-header mb-6 px-1">
+      <h1 class="text-2xl sm:text-3xl font-bold text-[var(--on-surface)] flex items-center gap-2">
+        <span>{pageTitle}</span>
+      </h1>
+      <p class="text-[var(--on-surface-variant)] text-sm sm:text-base mt-2">
+        {pageDescription}
+      </p>
+    </div>
+
+    <CommunityFeedApp client:load />
+  </div>
+</MainGridLayout>
