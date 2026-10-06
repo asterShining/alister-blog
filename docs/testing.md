@@ -8,6 +8,9 @@ The test target is Astro's local production preview at `http://127.0.0.1:4321`. 
 pnpm install --frozen-lockfile
 pnpm exec playwright install chromium --only-shell
 pnpm exec astro check
+pnpm typecheck:functions
+pnpm test:backend
+pnpm test:release
 pnpm build
 pnpm test:e2e:smoke
 pnpm test:e2e:production
@@ -18,6 +21,6 @@ The E2E commands start and stop Astro's production preview automatically. Port 4
 
 ## GitHub Actions
 
-The workflow runs `ci-build` then `e2e-smoke` for pushes and pull requests targeting `dev` or `main`. `e2e-production` also runs for a push to `main` or a pull request targeting `main`. Jobs test one shared production build; they do not deploy. GitHub Hosted Runner behavior remains unverified until the first push.
+The workflow runs `ci-build` then `e2e-smoke` for pushes and pull requests targeting `dev` or `main`. `e2e-production` also runs for a push to `main` or a pull request targeting `main`. Jobs test one shared production build; they do not deploy. These checks have run successfully on GitHub Actions; check the current run for each change rather than relying on an earlier result.
 
-After the first push, confirm `ci-build` and `e2e-smoke` pass on `dev`. Open a `dev` → `main` pull request and confirm all three jobs pass. Only then set GitHub Ruleset required checks: `ci-build` and `e2e-smoke` on `dev`; all three on `main`.
+Cloudflare Pages Git Integration handles deployment from `main`; GitHub Actions does not deploy. Local E2E uses Astro's production preview, not the public domain, and does not exercise Pages Functions or D1. Use the separate local Wrangler/Pages workflow described in `docs/public-backend.md` when validating Functions runtime behavior.
