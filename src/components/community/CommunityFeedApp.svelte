@@ -112,7 +112,7 @@ onMount(() => {
             <a
               href={`/community/${post.slug}/`}
               class="text-[var(--on-surface-variant)] hover:text-[var(--primary)] transition p-1 rounded-[var(--shape-corner-xs)] inline-flex items-center"
-              aria-label={`查看动态详情: ${post.title}`}
+              aria-label={`查看轨迹详情: ${post.title}`}
               title="查看详情"
             >
               <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">

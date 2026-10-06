@@ -150,12 +150,17 @@ export const LinkPresets: Record<string, NavBarLink> = {
 	},
 };
 
+/**
+ * 顶部导航顺序（产品冻结）：首页 · 文章 · 轨迹 · 标签 · 归档 · 友链 · 关于。
+ * 「轨迹」紧跟「文章」，两者是并列的内容入口（文章 = 长文，轨迹 = 短记录），
+ * 路由仍是 /community/，用户可见名称由 `communityConfig.title` 提供。
+ */
 const defaultNavBarConfig: NavBarConfig = {
 	links: [
 		LinkPresets.Home,
 		LinkPresets.Posts,
-		LinkPresets.Tags,
 		LinkPresets.Community,
+		LinkPresets.Tags,
 		LinkPresets.Archive,
 		LinkPresets.Friends,
 		LinkPresets.About,

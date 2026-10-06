@@ -7,7 +7,7 @@ if (!communityConfig.enable) {
   return Astro.redirect("/404/");
 }
 
-const pageTitle = "动态详情 - " + (communityConfig.title || "轨迹");
+const pageTitle = `${communityConfig.title || "轨迹"}详情`;
 ---
 
 <MainGridLayout title={pageTitle} description="Alister Blog 轨迹">

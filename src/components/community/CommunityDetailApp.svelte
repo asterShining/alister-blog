@@ -44,7 +44,7 @@ async function loadPost(slug: string) {
     }
   } catch (err: unknown) {
     status = "error";
-    errorMessage = err instanceof Error ? err.message : "获取动态详情失败";
+    errorMessage = err instanceof Error ? err.message : "获取轨迹详情失败";
   }
 }
 
@@ -102,9 +102,9 @@ onMount(() => {
   {:else if status === "notFound"}
     <div class="community-empty-state flex flex-col items-center justify-center p-8 sm:p-12 text-center rounded-[var(--shape-corner-l)] border border-dashed border-[var(--outline-variant)] bg-[var(--card-bg)] my-4">
       <div class="text-4xl mb-3">🔍</div>
-      <h2 class="text-xl sm:text-2xl font-bold text-[var(--on-surface)] mb-2">未找到该动态</h2>
+      <h2 class="text-xl sm:text-2xl font-bold text-[var(--on-surface)] mb-2">未找到该轨迹</h2>
       <p class="text-[var(--on-surface-variant)] text-sm sm:text-base max-w-md mb-6 leading-relaxed">
-        这条动态可能已被删除、设为私密或链接输入有误。
+        这条轨迹可能已被删除、设为私密或链接输入有误。
       </p>
       <a
         href="/community/"
@@ -117,7 +117,7 @@ onMount(() => {
     <div class="community-error-card rounded-[var(--shape-corner-l)] border border-[var(--outline-variant)] bg-[var(--card-bg)] p-6 text-center my-4">
       <div class="text-3xl mb-2">⚠️</div>
       <h2 class="text-lg font-bold text-[var(--on-surface)] mb-1">加载失败</h2>
-      <p class="text-sm text-[var(--on-surface-variant)] mb-4">{errorMessage || "无法获取动态内容，请稍后重试。"}</p>
+      <p class="text-sm text-[var(--on-surface-variant)] mb-4">{errorMessage || "无法获取轨迹内容，请稍后重试。"}</p>
       <button
         type="button"
         onclick={() => loadPost(getSlugFromPathname())}
@@ -230,8 +230,8 @@ onMount(() => {
       <aside class="community-phase-notice mt-6 p-4 rounded-[var(--shape-corner-m)] bg-[var(--surface-container)] border border-[var(--outline-variant)] flex items-start gap-3 text-xs sm:text-sm text-[var(--on-surface-variant)]">
         <span class="text-base text-[var(--primary)] mt-0.5">💡</span>
         <div>
-          <p class="font-medium text-[var(--on-surface)] mb-0.5">关于动态互动</p>
-          <p>当前阶段仅提供动态浏览，互动功能（点赞与评论）将在后续阶段开放。</p>
+          <p class="font-medium text-[var(--on-surface)] mb-0.5">关于轨迹互动</p>
+          <p>当前阶段仅提供轨迹浏览，互动功能（点赞与评论）将在后续阶段开放。</p>
         </div>
       </aside>
     </article>

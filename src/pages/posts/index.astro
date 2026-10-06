@@ -68,7 +68,7 @@ const { mode, cover, cardWidth } = postListConfig.layout;
           aria-controls="posts-search-pane"
         >
           <svg class="w-4 h-4 mr-1.5 shrink-0" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-            <path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 14z"/>
+            <path d="m19.6 21l-6.3-6.3q-.75.6-1.725.95T9.5 16q-2.725 0-4.612-1.888T3 9.5t1.888-4.612T9.5 3t4.613 1.888T16 9.5q0 1.1-.35 2.075T14.7 13.3l6.3 6.3zM9.5 14q1.875 0 3.188-1.312T14 9.5t-1.312-3.187T9.5 5T6.313 6.313T5 9.5t1.313 3.188T9.5 14"/>
           </svg>
           <span>检索</span>
         </button>
@@ -125,10 +125,11 @@ const { mode, cover, cardWidth } = postListConfig.layout;
 .posts-segmented-control
 	display: inline-flex
 	align-items: center
-	padding: 0.25rem
+	gap: 0.25rem
+	padding: 0.3rem
 	border-radius: var(--shape-corner-full, 9999px)
-	background: var(--surface-container-high, rgba(128, 128, 128, 0.12))
-	border: 1px solid var(--outline-variant, rgba(128, 128, 128, 0.2))
+	background: var(--btn-regular-bg)
+	border: 1px solid var(--outline-variant)
 	box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.08)
 	user-select: none
 
@@ -136,15 +137,23 @@ const { mode, cover, cardWidth } = postListConfig.layout;
 	display: inline-flex
 	align-items: center
 	justify-content: center
-	padding: 0.45rem 1.15rem
+	gap: 0.375rem
+	min-width: 6.25rem
+	height: 2.25rem
+	padding: 0 1.15rem
 	border-radius: var(--shape-corner-full, 9999px)
-	border: none
+	border: 1px solid transparent
 	background: transparent
 	font-size: 0.875rem
-	font-weight: 500
+	font-weight: 600
+	line-height: 1
 	color: var(--on-surface-variant)
 	cursor: pointer
-	transition: all 0.2s cubic-bezier(0.2, 0, 0, 1)
+	white-space: nowrap
+	transition: background-color 0.2s cubic-bezier(0.2, 0, 0, 1),
+		color 0.2s cubic-bezier(0.2, 0, 0, 1),
+		border-color 0.2s cubic-bezier(0.2, 0, 0, 1),
+		box-shadow 0.2s cubic-bezier(0.2, 0, 0, 1)
 
 	svg
 		width: 1.1rem
@@ -154,30 +163,42 @@ const { mode, cover, cardWidth } = postListConfig.layout;
 
 	&:hover:not(.posts-segment-btn--active)
 		color: var(--on-surface)
-		background: var(--surface-container-highest, rgba(128, 128, 128, 0.08))
+		background: var(--btn-regular-bg-hover)
+		border-color: var(--outline-variant)
 		svg
 			opacity: 1
+			transform: scale(1.04)
+
+	&:active:not(.posts-segment-btn--active)
+		background: var(--btn-regular-bg-active)
 
 	&:focus-visible
 		outline: 2px solid var(--primary)
-		outline-offset: 1px
+		outline-offset: 2px
 
 	&--active
 		background: var(--primary)
 		color: var(--on-primary)
-		font-weight: 600
-		box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2), 0 1px 2px rgba(0, 0, 0, 0.1)
+		border-color: transparent
+		font-weight: 700
+		box-shadow: 0 1px 4px rgba(0, 0, 0, 0.22), 0 1px 2px rgba(0, 0, 0, 0.12)
 
 		svg
 			opacity: 1
 			color: var(--on-primary)
 			fill: var(--on-primary)
 
+		&:hover
+			background: var(--primary)
+			color: var(--on-primary)
+
 @media (max-width: 639px)
 	.posts-segmented-control
 		width: 100%
 	.posts-segment-btn
-		flex: 1
+		flex: 1 1 0
+		min-width: 0
+		padding: 0 0.75rem
 
 .m3e-post-list-shell
 	container: post-list-layout / inline-size
@@ -208,69 +229,3 @@ activate-post-grid()
 		.m3e-post-list-shell--relaxed .m3e-post-list--grid
 			activate-post-grid()
 </style>
-
-<script is:inline>
-(() => {
-  function initPostsTabs() {
-    const feedBtn = document.getElementById("tab-btn-feed");
-    const searchBtn = document.getElementById("tab-btn-search");
-    const feedPane = document.getElementById("posts-feed-pane");
-    const searchPane = document.getElementById("posts-search-pane");
-
-    if (!feedBtn || !searchBtn || !feedPane || !searchPane) return;
-
-    function setTab(tab) {
-      if (tab === "search") {
-        feedBtn.classList.remove("posts-segment-btn--active", "m3-chip--selected");
-        feedBtn.setAttribute("aria-selected", "false");
-        searchBtn.classList.add("posts-segment-btn--active", "m3-chip--selected");
-        searchBtn.setAttribute("aria-selected", "true");
-        feedPane.classList.add("hidden");
-        searchPane.classList.remove("hidden");
-      } else {
-        searchBtn.classList.remove("posts-segment-btn--active", "m3-chip--selected");
-        searchBtn.setAttribute("aria-selected", "false");
-        feedBtn.classList.add("posts-segment-btn--active", "m3-chip--selected");
-        feedBtn.setAttribute("aria-selected", "true");
-        searchPane.classList.add("hidden");
-        feedPane.classList.remove("hidden");
-      }
-    }
-
-    // URL 参数判定：若包含 ?tab=search 或 ?category= / ?tag= / ?uncategorized，切到检索
-    const params = new URLSearchParams(window.location.search);
-    if (params.get("tab") === "search" || params.has("category") || params.has("tag") || params.has("uncategorized")) {
-      setTab("search");
-    } else {
-      setTab("feed");
-    }
-
-    feedBtn.onclick = () => {
-      setTab("feed");
-      const url = new URL(window.location.href);
-      url.searchParams.delete("tab");
-      url.searchParams.delete("category");
-      url.searchParams.delete("tag");
-      url.searchParams.delete("uncategorized");
-      window.history.replaceState({}, "", url.pathname);
-    };
-
-    searchBtn.onclick = () => {
-      setTab("search");
-      const url = new URL(window.location.href);
-      url.searchParams.set("tab", "search");
-      window.history.replaceState({}, "", url.toString());
-    };
-  }
-
-  initPostsTabs();
-
-  if (window.swup?.hooks) {
-    window.swup.hooks.on("content:replace", initPostsTabs);
-  } else {
-    document.addEventListener("swup:enable", () => {
-      window.swup?.hooks?.on("content:replace", initPostsTabs);
-    });
-  }
-})();
-</script>

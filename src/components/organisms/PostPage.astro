@@ -1,7 +1,8 @@
 ---
 /**
  * 首页文章与轨迹综合 Feed：
- * - 顶部内容类型筛选：全部 | 文章 | 轨迹（默认全部）；
+ * - 顶部内容类型筛选：全部 | 文章 | 轨迹（默认全部），由 ContentTypeFilter 承担，
+ *   随首页 Feed 一起渲染在 Swup 容器内，因此只属于首页、不残留到其它页面；
  * - 默认“全部”流合并展示文章与轨迹（按真实发布时间倒序排列）；
  * - 文章卡片显示 [文章] 徽标，轨迹卡片显示 [轨迹] 徽标；
  * - 轨迹数据通过客户端动态拉取，API 异常时容错降级，不阻断文章流。
@@ -12,6 +13,7 @@ import { POST_CARD_MIN_WIDTH, postListConfig } from "@/config/postListConfig";
 import PostCard from "@components/organisms/PostCard.astro";
 import { communityConfig } from "@config/communityConfig.ts";
 import { mockCommunityPosts } from "../../lib/community/fixtures";
+import ContentTypeFilter from "./ContentTypeFilter.astro";
 
 const { page } = Astro.props;
 
@@ -22,6 +24,9 @@ const { mode, cover, cardWidth } = postListConfig.layout;
 const isDev = import.meta.env.DEV;
 const isCommunityEnabled = communityConfig.enable;
 ---
+
+<!-- 首页内容类型筛选（Homepage Content Type Filter）：全部 | 文章 | 轨迹 -->
+<ContentTypeFilter />
 
 <div id="post-page-config" data-community-enabled={isCommunityEnabled ? "true" : "false"} class="hidden"></div>
 
@@ -193,10 +198,15 @@ function initHomeFeed() {
 
     if (noticeEl) {
       if (activeFilter === "trajectory" && visibleTrajectoryCount === 0) {
+        const noticeText = !isCommunityEnabled
+          ? "轨迹内容暂未开放，敬请期待。"
+          : trajectoryApiFailed
+            ? "暂无法获取轨迹数据，请稍后重试。"
+            : "Alister 还没发布任何轨迹记录，过段时间再来看看吧。";
         noticeEl.classList.remove("hidden");
         noticeEl.innerHTML = `
           <div class="rounded-[var(--shape-corner-l)] border border-[var(--outline-variant)] bg-[var(--card-bg)] p-6 text-center text-sm text-[var(--on-surface-variant)]">
-            ${trajectoryApiFailed ? "暂无法获取轨迹数据，请稍后重试。" : "Alister 还没发布任何轨迹记录，过段时间再来看看吧。"}
+            ${noticeText}
           </div>
         `;
       } else {
@@ -382,6 +392,9 @@ function initHomeFeed() {
       updateCardVisibility();
     }
   }
+
+  // 筛选栏静态渲染在 Swup 容器之外，重复进入首页时按默认值复位 UI 状态
+  setFilter("all");
 
   if (isCommunityEnabled) {
     loadTrajectoryFeed();
