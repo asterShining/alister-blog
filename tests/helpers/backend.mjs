@@ -12,10 +12,16 @@ const turnstileHelper = ts.transpileModule(readFileSync('functions/_lib/turnstil
 }).outputText;
 const turnstileHelperUrl = `data:text/javascript;base64,${Buffer.from(turnstileHelper).toString('base64')}`;
 
+const mediaHelper = ts.transpileModule(readFileSync('functions/_lib/community-media.ts', 'utf8'), {
+  compilerOptions: { module: ts.ModuleKind.ESNext },
+}).outputText;
+const mediaHelperUrl = `data:text/javascript;base64,${Buffer.from(mediaHelper).toString('base64')}`;
+
 export async function handler(path) {
   const source = ts.transpileModule(readFileSync(path, 'utf8'), {
     compilerOptions: { module: ts.ModuleKind.ESNext },
   }).outputText
+    .replace(/from ['"][^'"]*_lib\/community-media['"]/g, `from '${mediaHelperUrl}'`)
     .replace(/from ['"][^'"]*_lib\/http['"]/g, `from '${httpHelperUrl}'`)
     .replace(/from ['"][^'"]*_lib\/turnstile['"]/g, `from '${turnstileHelperUrl}'`);
   return (await import(`data:text/javascript;base64,${Buffer.from(source).toString('base64')}`)).onRequest;

@@ -6,8 +6,6 @@
 export interface CommunityImage {
   url: string;
   alt?: string;
-  width?: number;
-  height?: number;
 }
 
 export interface CommunityAuthor {

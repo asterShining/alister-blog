@@ -1,3 +1,4 @@
+import { resolveCommunityImageUrl } from '../../../../_lib/community-media';
 import { json, validSlug, type Env } from '../../../../_lib/http';
 
 interface RawPost {
@@ -12,10 +13,8 @@ interface RawPost {
 }
 
 interface RawImage {
-  url: string;
+  objectKey: string;
   alt?: string | null;
-  width?: number | null;
-  height?: number | null;
 }
 
 export const onRequest: PagesFunction<Env> = async ({ request, params, env }) => {
@@ -44,17 +43,15 @@ export const onRequest: PagesFunction<Env> = async ({ request, params, env }) =>
 
     // 2. Query images for this post
     const imagesResult = await env.DB.prepare(
-      `SELECT url, alt_text AS alt, width, height
+      `SELECT object_key AS objectKey, alt_text AS alt
        FROM community_post_images
        WHERE post_id = ?
        ORDER BY sort_order ASC`
     ).bind(post.id).all<RawImage>();
 
     const images = (imagesResult.results || []).map((img) => ({
-      url: img.url,
+      url: resolveCommunityImageUrl(img.objectKey, env),
       alt: img.alt || undefined,
-      width: img.width ? Number(img.width) : undefined,
-      height: img.height ? Number(img.height) : undefined,
     }));
 
     // 3. Assemble response

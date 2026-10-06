@@ -57,8 +57,6 @@ Community 是 Alister Blog 的短内容广场（动态、短图文、项目随�
 export interface CommunityImage {
   url: string;
   alt?: string;
-  width?: number;
-  height?: number;
 }
 
 export interface CommunityAuthor {
@@ -131,9 +129,7 @@ export interface ListCommunityPostsResult {
         "images": [
           {
             "url": "https://img.alistereno.top/community/k230-board.webp",
-            "alt": "K230 开发板调试环境",
-            "width": 1200,
-            "height": 800
+            "alt": "K230 开发板调试环境"
           }
         ]
       }
@@ -170,9 +166,7 @@ export interface ListCommunityPostsResult {
     "images": [
       {
         "url": "https://img.alistereno.top/community/k230-board.webp",
-        "alt": "K230 开发板调试环境",
-        "width": 1200,
-        "height": 800
+        "alt": "K230 开发板调试环境"
       }
     ]
   }
@@ -208,43 +202,44 @@ export interface ListCommunityPostsResult {
 
 ### 5.1 `community_posts`
 ```sql
-CREATE TABLE IF NOT EXISTS community_posts (
+CREATE TABLE community_posts (
   id TEXT PRIMARY KEY,
   slug TEXT NOT NULL UNIQUE,
   title TEXT NOT NULL,
   content TEXT NOT NULL,
-  content_format TEXT NOT NULL DEFAULT 'markdown',
-  visibility TEXT NOT NULL DEFAULT 'public',
-  created_at TEXT NOT NULL,
-  updated_at TEXT,
-  published_at TEXT
+  content_format TEXT NOT NULL DEFAULT 'markdown' CHECK(content_format IN ('markdown', 'mdx')),
+  visibility TEXT NOT NULL DEFAULT 'public' CHECK(visibility IN ('public', 'unlisted')),
+  published_at TEXT,
+  created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE INDEX IF NOT EXISTS idx_community_posts_visibility_published
-ON community_posts(visibility, published_at DESC, created_at DESC);
-
-CREATE INDEX IF NOT EXISTS idx_community_posts_slug
-ON community_posts(slug);
+CREATE INDEX idx_community_posts_visibility_published ON community_posts(visibility, published_at DESC, created_at DESC);
+CREATE UNIQUE INDEX idx_community_posts_slug ON community_posts(slug);
 ```
 
 ### 5.2 `community_post_images`
 ```sql
-CREATE TABLE IF NOT EXISTS community_post_images (
+CREATE TABLE community_post_images (
   id TEXT PRIMARY KEY,
   post_id TEXT NOT NULL REFERENCES community_posts(id) ON DELETE CASCADE,
-  url TEXT NOT NULL,
+  object_key TEXT NOT NULL CHECK(length(trim(object_key)) > 0),
   alt_text TEXT,
-  width INTEGER,
-  height INTEGER,
-  sort_order INTEGER NOT NULL DEFAULT 0,
-  created_at TEXT NOT NULL
+  sort_order INTEGER NOT NULL DEFAULT 0 CHECK(sort_order >= 0),
+  created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE(post_id, sort_order)
 );
 
-CREATE INDEX IF NOT EXISTS idx_community_post_images_post_sort
-ON community_post_images(post_id, sort_order ASC);
+CREATE INDEX idx_community_post_images_post_id ON community_post_images(post_id, sort_order ASC);
 ```
 
 > [!NOTE]
 > - 不在 D1 创建任何管理表、sync_state 或草稿私密数据。
 > - 访客公开列表仅查 `visibility = 'public'`，详情直查允许 `public` 与 `unlisted`。
 > - 严禁在 API 响应中暴露内部字段（如对象存储 key、SQL 细节、错误堆栈）。
+
+## 6. 图片跨仓库契约
+
+JD PostgreSQL 与 D1 public replica 均保存 canonical `object_key`，不保存 resolved URL 或 width/height metadata。Pages Functions 使用可选 `COMMUNITY_MEDIA_BASE_URL` 与规范化 object key 生成 HTTP(S) URL。Browser DTO v1 仅含 `url` 与可选 `alt`，不暴露 object_key。
+
+base 尾部和 key 开头斜杠会规范化；危险协议、路径穿越及非法配置会被拒绝。未配置 media base 时，无图内容正常返回；查到图片则返回脱敏 HTTP 500，不泄漏 key 或环境配置。0004 尚未生产应用，本次直接修正；remote apply 需要单独授权。Community 保持关闭。

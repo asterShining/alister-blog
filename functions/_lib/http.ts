@@ -1,5 +1,6 @@
 export interface Env {
   DB: D1Database;
+  COMMUNITY_MEDIA_BASE_URL?: string;
   TURNSTILE_SECRET: string;
   ASSETS?: {
     fetch: typeof fetch;

@@ -29,14 +29,10 @@ kpu.load_kmodel("/sdcard/models/yolov8n.kmodel")
       {
         url: "/images/moments/scenery/scene-1.webp",
         alt: "K230 开发板调试环境",
-        width: 1200,
-        height: 800,
       },
       {
         url: "/images/moments/scenery/scene-2.webp",
         alt: "模型推理输出",
-        width: 1200,
-        height: 800,
       },
     ],
   },
@@ -60,26 +56,18 @@ kpu.load_kmodel("/sdcard/models/yolov8n.kmodel")
       {
         url: "/images/moments/scenery/scene-3.webp",
         alt: "Gazebo 仿真地图",
-        width: 1200,
-        height: 800,
       },
       {
         url: "/images/moments/scenery/scene-4.webp",
         alt: "Nav2 局部路径规划",
-        width: 1200,
-        height: 800,
       },
       {
         url: "/images/moments/night/window-sun.webp",
         alt: "动态障碍物避让",
-        width: 1200,
-        height: 800,
       },
       {
         url: "/images/moments/girls-roll/roll-1.webp",
         alt: "目标点到达精度",
-        width: 1200,
-        height: 800,
       },
     ],
   },
@@ -103,8 +91,6 @@ kpu.load_kmodel("/sdcard/models/yolov8n.kmodel")
       {
         url: "/images/moments/girls-roll/roll-2.webp",
         alt: "Girls Band Cry 剧照",
-        width: 1200,
-        height: 800,
       },
     ],
   },

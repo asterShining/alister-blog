@@ -1,3 +1,4 @@
+import { resolveCommunityImageUrl } from '../../../../_lib/community-media';
 import { json, type Env } from '../../../../_lib/http';
 
 interface RawPost {
@@ -13,10 +14,8 @@ interface RawPost {
 
 interface RawImage {
   postId: string;
-  url: string;
+  objectKey: string;
   alt?: string | null;
-  width?: number | null;
-  height?: number | null;
 }
 
 export const onRequest: PagesFunction<Env> = async ({ request, env }) => {
@@ -57,22 +56,20 @@ export const onRequest: PagesFunction<Env> = async ({ request, env }) => {
     const postIds = rawPosts.map((p) => p.id);
     const placeholders = postIds.map(() => '?').join(',');
     const imagesResult = await env.DB.prepare(
-      `SELECT post_id AS postId, url, alt_text AS alt, width, height
+      `SELECT post_id AS postId, object_key AS objectKey, alt_text AS alt
        FROM community_post_images
        WHERE post_id IN (${placeholders})
        ORDER BY sort_order ASC`
     ).bind(...postIds).all<RawImage>();
 
-    const imageMap = new Map<string, Array<{ url: string; alt?: string; width?: number; height?: number }>>();
+    const imageMap = new Map<string, Array<{ url: string; alt?: string }>>();
     for (const img of imagesResult.results || []) {
       if (!imageMap.has(img.postId)) {
         imageMap.set(img.postId, []);
       }
       imageMap.get(img.postId)!.push({
-        url: img.url,
+        url: resolveCommunityImageUrl(img.objectKey, env),
         alt: img.alt || undefined,
-        width: img.width ? Number(img.width) : undefined,
-        height: img.height ? Number(img.height) : undefined,
       });
     }
 
