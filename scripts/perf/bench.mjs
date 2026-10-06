@@ -54,6 +54,10 @@ const COLD_PAGES = opt(
 // Optional network emulation, needed to measure bandwidth-sensitive work: on
 // localhost a byte saved is worth nothing. Format "latencyMs x kbps", e.g.
 // "--throttle 150x1600" for a 150 ms RTT / 1.6 Mbit link.
+// Community is a Production-only build flag, so a Cloudflare *preview* build
+// renders no 轨迹 entry and /community/ redirects to /404/. Skip those steps
+// when validating a preview instead of pretending they passed.
+const SKIP_COMMUNITY = argv.includes("--skip-community");
 const THROTTLE = (() => {
 	const raw = opt("throttle", "");
 	const m = /^(\d+)x(\d+)$/.exec(raw);
@@ -312,8 +316,11 @@ async function runNav(browser) {
 	await page.goto(`${ORIGIN}/`, { waitUntil: "load", timeout: 60000 });
 	await waitSwupReady(page);
 
+	const loop = SKIP_COMMUNITY
+		? NAV_LOOP.filter((s) => s.from !== "/community/" && s.to !== "/community/")
+		: NAV_LOOP;
 	for (let round = 0; round < ROUNDS; round += 1) {
-		for (const step of NAV_LOOP) {
+		for (const step of loop) {
 			// Guard: after a failed navigation the loop must resync rather than
 			// silently measuring the wrong transition.
 			const live = new URL(page.url()).pathname;

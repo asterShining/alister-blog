@@ -49,12 +49,17 @@ const probe = () =>
 		};
 	});
 
+// Preview builds have no COMMUNITY_ENABLE, so /community/ redirects to /404/.
 const LOOP = [
 	["/", '[data-nav-key="posts"]'],
 	["/posts/", '[data-nav-key="archive"]'],
 	["/archive/", '[data-nav-key="home"]'],
-	["/", '[data-nav-key="community"]'],
-	["/community/", '[data-nav-key="posts"]'],
+	...(process.argv.includes("--skip-community")
+		? []
+		: [
+				["/", '[data-nav-key="community"]'],
+				["/community/", '[data-nav-key="posts"]'],
+			]),
 	["/posts/", '[data-nav-key="friends"]'],
 	["/friends/", '[data-nav-key="about"]'],
 	["/about/", '[data-nav-key="home"]'],
