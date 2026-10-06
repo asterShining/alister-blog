@@ -7,8 +7,6 @@
   "exclude": [
     "/community/",
     "/community/index.html",
-    "/community/post/",
-    "/community/post/index.html",
     "/community/post/*"
   ]
 }
