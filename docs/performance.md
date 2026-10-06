@@ -272,8 +272,36 @@ site, (b) the physical round trip, and (c) per-request Function/D1 latency.
 | Preloading the CJK font | It is the largest single resource, but `preload: false` is deliberate and the font already uses `display: swap`; preloading would move bytes back onto the critical path. |
 | Consolidating the 58 script requests | Would require changing the theme's chunking (`viteBuildShared.rollupOptions` lives in the theme package) for a low measured benefit. |
 
-## 6. Open Items (recommended follow-ups)
+## 5b. Cloudflare Pages Preview Validation
 
+`COMMUNITY_ENABLE` is a **Production-only** build variable and the preview
+environment has no usable `DB` binding (`/api/v1/health` 503,
+`/api/v1/community/posts` 500). A preview build therefore renders no 轨迹 entry
+and redirects `/community/` to `/404/`. That was not worked around: adding
+preview-only environment variables is a Cloudflare setting change and outside the
+scope of this work. Instead the preview validates everything that does not depend
+on the flag, and the Community path is validated on the local enabled preview.
+
+Measured on `https://perf-navigation-runtime.alister-blog.pages.dev`
+(community-disabled routes, 5 rounds, `--skip-community`):
+
+| Path | Production baseline (before) | Preview (after) |
+| --- | ---: | ---: |
+| Home → Posts | 2594 ms | **746 ms** |
+| Posts → Archive | 3462 ms | **747 ms** |
+| Archive → Home | 3897 ms | **747 ms** |
+
+Phase split on the real edge: network 15–19 ms, out-transition 146 ms, DOM
+replace window 149 ms, post-replace JS 0.8 ms, in-transition 118 ms. Community
+API requests per navigation were 0, confirming the disabled-flag isolation still
+holds, and a 24-navigation session drifted **-73 ms** with 0 console errors.
+
+Production still runs the old build, so its numbers are unchanged until this
+branch is merged. The API-blocked falsification above (2594 → 861 ms) is the best
+estimate of what Production would do after the fix, because it removes the API
+cost without removing the round trip.
+
+## 6. Open Items (recommended follow-ups)
 1. **Mobile CLS 0.105 on the homepage** is above the "good" 0.1 threshold. The
    trajectory cards are inserted asynchronously after the feed response, which
    shifts the article list. Reserving space for the first card, or inserting
