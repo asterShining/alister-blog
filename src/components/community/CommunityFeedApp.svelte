@@ -22,7 +22,7 @@ async function loadFeed() {
     }
   } catch (err: unknown) {
     status = "error";
-    errorMessage = err instanceof Error ? err.message : "获取社区动态失败";
+    errorMessage = err instanceof Error ? err.message : "获取轨迹列表失败";
   }
 }
 
@@ -54,8 +54,8 @@ onMount(() => {
   {:else if status === "error"}
     <div class="community-error-card rounded-[var(--shape-corner-l)] border border-[var(--outline-variant)] bg-[var(--card-bg)] p-6 text-center my-4">
       <div class="text-3xl mb-2">⚠️</div>
-      <h2 class="text-lg font-bold text-[var(--on-surface)] mb-1">动态加载失败</h2>
-      <p class="text-sm text-[var(--on-surface-variant)] mb-4">{errorMessage || "无法获取社区动态，请稍后重试。"}</p>
+      <h2 class="text-lg font-bold text-[var(--on-surface)] mb-1">轨迹加载失败</h2>
+      <p class="text-sm text-[var(--on-surface-variant)] mb-4">{errorMessage || "无法获取轨迹，请稍后重试。"}</p>
       <button
         type="button"
         onclick={loadFeed}
@@ -69,9 +69,9 @@ onMount(() => {
       <div class="w-14 h-14 rounded-[var(--shape-corner-m)] bg-[var(--btn-regular-bg)] flex items-center justify-center text-[var(--btn-content)] text-2xl mb-4">
         💬
       </div>
-      <h2 class="text-xl sm:text-2xl font-bold text-[var(--on-surface)] mb-2">还没有动态呢</h2>
+      <h2 class="text-xl sm:text-2xl font-bold text-[var(--on-surface)] mb-2">还没有轨迹呢</h2>
       <p class="text-[var(--on-surface-variant)] text-sm sm:text-base max-w-md mb-6 leading-relaxed">
-        Alister 还没发布任何社区动态，过段时间再来看看吧。
+        Alister 还没发布任何轨迹记录，过段时间再来看看吧。
       </p>
       <a
         href="/"
@@ -112,7 +112,7 @@ onMount(() => {
             <a
               href={`/community/${post.slug}/`}
               class="text-[var(--on-surface-variant)] hover:text-[var(--primary)] transition p-1 rounded-[var(--shape-corner-xs)] inline-flex items-center"
-              aria-label={`查看动态详情: ${post.title}`}
+              aria-label={`查看轨迹详情: ${post.title}`}
               title="查看详情"
             >
               <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">

@@ -39,6 +39,12 @@ export const LinkPresets: Record<string, NavBarLink> = {
 		icon: "material-symbols:home-outline-rounded",
 		pageKey: "home",
 	},
+	Posts: {
+		name: "文章",
+		url: "/posts/",
+		icon: "material-symbols:article-outline-rounded",
+		pageKey: "posts",
+	},
 	Archive: {
 		name: i18n(I18nKey.archive),
 		url: "/archive/",
@@ -124,7 +130,7 @@ export const LinkPresets: Record<string, NavBarLink> = {
 		pageKey: "series",
 	},
 	Community: {
-		name: communityConfig.title || "社区",
+		name: communityConfig.title || "轨迹",
 		url: "/community/",
 		icon: "material-symbols:forum-outline-rounded",
 		pageKey: "community",
@@ -144,14 +150,18 @@ export const LinkPresets: Record<string, NavBarLink> = {
 	},
 };
 
+/**
+ * 顶部导航顺序（产品冻结）：首页 · 文章 · 轨迹 · 标签 · 归档 · 友链 · 关于。
+ * 「轨迹」紧跟「文章」，两者是并列的内容入口（文章 = 长文，轨迹 = 短记录），
+ * 路由仍是 /community/，用户可见名称由 `communityConfig.title` 提供。
+ */
 const defaultNavBarConfig: NavBarConfig = {
 	links: [
 		LinkPresets.Home,
-		// Shirone's archive route is the available article index.
-		LinkPresets.Archive,
-		LinkPresets.Tags,
+		LinkPresets.Posts,
 		LinkPresets.Community,
-		LinkPresets.Anime,
+		LinkPresets.Tags,
+		LinkPresets.Archive,
 		LinkPresets.Friends,
 		LinkPresets.About,
 	],

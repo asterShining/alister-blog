@@ -11,6 +11,13 @@ const postCommentsScript = new URL(
   import.meta.url,
 ).pathname;
 
+// Page-scoped chrome sync: keeps the Swup-static archive category bar and the
+// top navigation active state correct on first paint and after every visit.
+const pageScopedChromeScript = new URL(
+  "./src/scripts/page-scoped-chrome.ts",
+  import.meta.url,
+).pathname;
+
 const starryTheme = {
   name: "alister-blog-starry-theme",
   hooks: {
@@ -45,6 +52,10 @@ const starryTheme = {
         "page",
         `import ${JSON.stringify(postCommentsScript)};`,
       );
+      injectScript(
+        "page",
+        `import ${JSON.stringify(pageScopedChromeScript)};`,
+      );
     },
   },
 };
@@ -57,6 +68,18 @@ export default defineConfig({
   // still emits while Series is disabled; see `src/logger.mjs`.
   logger: {
     entrypoint: "./src/logger.mjs",
+  },
+  vite: {
+    define: {
+      // `shirones/config/communityConfig.ts` is shared by SSR and by client
+      // islands (mobile navigation drawer, Community apps), and browsers have
+      // no `process.env`. Inline the build-time flag so both sides agree —
+      // otherwise the drawer loses the 轨迹 entry after hydration.
+      __COMMUNITY_ENABLE__: JSON.stringify(
+        process.env.COMMUNITY_ENABLE === "true" ||
+          process.env.COMMUNITY_ENABLE === "1",
+      ),
+    },
   },
   integrations: [
     starryTheme,

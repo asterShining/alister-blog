@@ -30,6 +30,12 @@ html:root:not(.dark) {
 	--theme-shadow: 0 14px 36px rgb(32 73 110 / 13%);
 	--theme-shadow-hover: 0 18px 42px rgb(32 73 110 / 19%);
 	--theme-glass-filter: blur(10px) saturate(112%);
+	/* Auxiliary bar (archive category bar): one step lighter than the article
+	 * and archive cards, so it never competes with the main panel. */
+	--theme-aux-surface: rgb(250 253 255 / 58%);
+	--theme-aux-outline: rgb(52 105 147 / 20%);
+	--theme-aux-shadow: 0 6px 18px rgb(32 73 110 / 10%);
+	--theme-aux-glass-filter: blur(12px) saturate(115%);
 	--theme-wallpaper: var(--theme-light-wallpaper);
 
 	/* Shirone semantic tokens: keep every component on its native color path. */
@@ -92,6 +98,12 @@ html:root.dark {
 	--theme-shadow-hover: 0 20px 48px rgb(0 3 16 / 45%);
 	/* The dark surfaces are opaque enough without a costly backdrop pass. */
 	--theme-glass-filter: none;
+	/* The auxiliary bar is small: it keeps its own blur so the starfield stays
+	 * faintly visible underneath instead of showing through as raw noise. */
+	--theme-aux-surface: rgb(11 22 47 / 56%);
+	--theme-aux-outline: rgb(160 187 230 / 24%);
+	--theme-aux-shadow: 0 10px 26px rgb(0 3 16 / 30%);
+	--theme-aux-glass-filter: blur(14px) saturate(118%);
 	--theme-wallpaper: var(--theme-dark-wallpaper);
 
 	--page-bg: var(--theme-page);
@@ -387,6 +399,22 @@ body[data-banner-layout="banner"] #main-layout {
 	box-shadow: 0 8px 24px color-mix(in srgb, var(--theme-primary) 16%, transparent);
 }
 
+/* Frosted-glass auxiliary bar (archive category bar). Deliberately lighter than
+ * `.m3-profile` / `.m3-blog-postcard`: no card-level fill — just a translucent
+ * strip with a hairline border and a very light shadow, so the main panel below
+ * stays the visual anchor. Surface values come from the `--theme-aux-*` tokens. */
+.category-bar {
+	border: 1px solid var(--theme-aux-outline);
+	background: var(--theme-aux-surface);
+	box-shadow: var(--theme-aux-shadow);
+	-webkit-backdrop-filter: var(--theme-aux-glass-filter);
+	backdrop-filter: var(--theme-aux-glass-filter);
+	transition:
+		background-color 320ms var(--m3e-easing-standard),
+		border-color 320ms var(--m3e-easing-standard),
+		box-shadow 360ms var(--m3e-easing-standard);
+}
+
 .m3-profile__accent {
 	background: linear-gradient(90deg, var(--theme-primary), var(--theme-secondary));
 }
@@ -438,12 +466,14 @@ html.is-changing[data-texture-preset] #m3e-texture-canvas {
 }
 
 html.is-animating .m3-profile,
-html.is-animating .m3-blog-postcard {
+html.is-animating .m3-blog-postcard,
+html.is-animating .category-bar {
 	-webkit-backdrop-filter: none;
 	backdrop-filter: none;
 }
 
-html.motion-reduced .m3-blog-postcard {
+html.motion-reduced .m3-blog-postcard,
+html.motion-reduced .category-bar {
 	transition: none;
 }
 
@@ -455,7 +485,8 @@ html.motion-reduced .m3-blog-postcard {
 	.banner-stage__media::before,
 	.banner-stage__media::after,
 	.m3-profile,
-	.m3-blog-postcard {
+	.m3-blog-postcard,
+	.category-bar {
 		transition: none;
 	}
 }
@@ -465,7 +496,8 @@ html.motion-reduced body::after,
 html.motion-reduced .banner-stage__media::before,
 html.motion-reduced .banner-stage__media::after,
 html.motion-reduced .banner-stage,
-html.motion-reduced .m3-profile {
+html.motion-reduced .m3-profile,
+html.motion-reduced .category-bar {
 	transition: none;
 }
 
@@ -489,4 +521,31 @@ html.motion-reduced .m3-profile {
 	.m3-blog-postcard:hover {
 		transform: none;
 	}
+}
+
+/* Content Type Badges (文章 vs 轨迹) */
+.m3-content-badge {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	font-size: 0.72rem;
+	font-weight: 600;
+	line-height: 1;
+	padding: 0.2rem 0.5rem;
+	border-radius: var(--shape-corner-xs, 4px);
+	vertical-align: middle;
+	flex-shrink: 0;
+	letter-spacing: 0.02em;
+}
+
+.m3-content-badge--article {
+	background: var(--primary-container);
+	color: var(--on-primary-container);
+	border: 1px solid var(--outline-soft, transparent);
+}
+
+.m3-content-badge--trajectory {
+	background: var(--tertiary-container);
+	color: var(--on-tertiary-container);
+	border: 1px solid var(--outline-soft, transparent);
 }
