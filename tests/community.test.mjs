@@ -6,7 +6,7 @@ import {
   renderCommunityMarkdown,
   mockCommunityPosts,
   MockCommunityAdapter,
-  EmptyCommunityAdapter,
+  ApiCommunityAdapter,
 } from "../src/lib/community/index.ts";
 
 test("escapeHtml escapes dangerous HTML characters", () => {
@@ -66,29 +66,30 @@ test("renderCommunityMarkdown allows safe links and rejects dangerous protocols"
   assert.ok(unsafeHtml.includes("恶意链接"));
 });
 
-test("mockCommunityPosts contains 4 diverse items", () => {
+test("mockCommunityPosts contains 4 diverse items with required titles", () => {
   assert.equal(mockCommunityPosts.length, 4);
 
   // K230 has 2 images
   const k230 = mockCommunityPosts.find((p) => p.slug === "k230-canmv-debug");
   assert.ok(k230);
-  assert.equal(k230.images?.length, 2);
+  assert.equal(k230.images.length, 2);
+  assert.equal(typeof k230.title, "string");
 
   // ROS2 has 4 images
   const ros = mockCommunityPosts.find((p) => p.slug === "ros2-nav2-simulation");
   assert.ok(ros);
-  assert.equal(ros.images?.length, 4);
+  assert.equal(ros.images.length, 4);
 
   // Anime has 1 image
   const anime = mockCommunityPosts.find((p) => p.slug === "anime-review-girls-band-cry");
   assert.ok(anime);
-  assert.equal(anime.images?.length, 1);
+  assert.equal(anime.images.length, 1);
 
-  // Thoughts has 0 images and no title
+  // Thoughts has 0 images and required title
   const thoughts = mockCommunityPosts.find((p) => p.slug === "weekly-random-thoughts");
   assert.ok(thoughts);
-  assert.equal(thoughts.images?.length, 0);
-  assert.equal(thoughts.title, undefined);
+  assert.equal(thoughts.images.length, 0);
+  assert.equal(thoughts.title, "日常碎碎念与代码整理");
 });
 
 test("MockCommunityAdapter lists and filters posts", async () => {
@@ -97,9 +98,9 @@ test("MockCommunityAdapter lists and filters posts", async () => {
   assert.equal(all.total, 4);
   assert.equal(all.posts.length, 4);
 
-  const filtered = await adapter.listPosts({ tag: "K230" });
-  assert.equal(filtered.posts.length, 1);
-  assert.equal(filtered.posts[0].slug, "k230-canmv-debug");
+  const paginated = await adapter.listPosts({ limit: 2, offset: 1 });
+  assert.equal(paginated.posts.length, 2);
+  assert.equal(paginated.posts[0].slug, "ros2-nav2-simulation");
 
   const single = await adapter.getPost("k230-canmv-debug");
   assert.ok(single);
@@ -109,12 +110,67 @@ test("MockCommunityAdapter lists and filters posts", async () => {
   assert.equal(notFound, null);
 });
 
-test("EmptyCommunityAdapter returns empty data", async () => {
-  const adapter = new EmptyCommunityAdapter();
-  const all = await adapter.listPosts();
-  assert.equal(all.total, 0);
-  assert.equal(all.posts.length, 0);
+test("ApiCommunityAdapter queries API correctly", async () => {
+  // Test ApiCommunityAdapter with a mock fetch
+  const originalFetch = globalThis.fetch;
+  try {
+    globalThis.fetch = async (url) => {
+      const u = String(url);
+      if (u.includes("/api/v1/community/posts/not-found")) {
+        return new Response(JSON.stringify({ code: 404, message: "Not found" }), { status: 404 });
+      }
+      if (u.includes("/api/v1/community/posts/sample")) {
+        return new Response(
+          JSON.stringify({
+            code: 0,
+            data: {
+              id: "p1",
+              slug: "sample",
+              title: "Sample",
+              content: "Body",
+              author: { name: "Alister" },
+              createdAt: "2026-10-06T12:00:00Z",
+              images: [],
+            },
+          }),
+          { status: 200 },
+        );
+      }
+      return new Response(
+        JSON.stringify({
+          code: 0,
+          data: {
+            posts: [
+              {
+                id: "p1",
+                slug: "sample",
+                title: "Sample",
+                content: "Body",
+                author: { name: "Alister" },
+                createdAt: "2026-10-06T12:00:00Z",
+                images: [],
+              },
+            ],
+            total: 1,
+          },
+        }),
+        { status: 200 },
+      );
+    };
 
-  const post = await adapter.getPost("k230-canmv-debug");
-  assert.equal(post, null);
+    const adapter = new ApiCommunityAdapter("https://mock.api");
+    const list = await adapter.listPosts({ limit: 10 });
+    assert.equal(list.total, 1);
+    assert.equal(list.posts.length, 1);
+    assert.equal(list.posts[0].slug, "sample");
+
+    const post = await adapter.getPost("sample");
+    assert.ok(post);
+    assert.equal(post.slug, "sample");
+
+    const nullPost = await adapter.getPost("not-found");
+    assert.equal(nullPost, null);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
 });

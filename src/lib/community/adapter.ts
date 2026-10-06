@@ -12,15 +12,11 @@ export interface CommunityAdapter {
 
 export class MockCommunityAdapter implements CommunityAdapter {
   async listPosts(options?: ListCommunityPostsOptions): Promise<ListCommunityPostsResult> {
-    let posts = [...mockCommunityPosts];
-    if (options?.tag) {
-      posts = posts.filter((p) => p.tags?.includes(options.tag!));
-    }
-    const total = posts.length;
+    const total = mockCommunityPosts.length;
     const offset = options?.offset ?? 0;
-    const limit = options?.limit ?? posts.length;
+    const limit = options?.limit ?? mockCommunityPosts.length;
     return {
-      posts: posts.slice(offset, offset + limit),
+      posts: mockCommunityPosts.slice(offset, offset + limit),
       total,
     };
   }
@@ -31,13 +27,48 @@ export class MockCommunityAdapter implements CommunityAdapter {
   }
 }
 
-export class EmptyCommunityAdapter implements CommunityAdapter {
-  async listPosts(_options?: ListCommunityPostsOptions): Promise<ListCommunityPostsResult> {
-    return { posts: [], total: 0 };
+export class ApiCommunityAdapter implements CommunityAdapter {
+  private baseUrl: string;
+
+  constructor(baseUrl = "") {
+    this.baseUrl = baseUrl;
   }
 
-  async getPost(_slug: string): Promise<CommunityPost | null> {
-    return null;
+  async listPosts(options?: ListCommunityPostsOptions): Promise<ListCommunityPostsResult> {
+    const params = new URLSearchParams();
+    if (options?.limit !== undefined) params.set("limit", String(options.limit));
+    if (options?.offset !== undefined) params.set("offset", String(options.offset));
+    const qs = params.toString();
+    const url = `${this.baseUrl}/api/v1/community/posts${qs ? `?${qs}` : ""}`;
+
+    const res = await fetch(url);
+    if (!res.ok) {
+      throw new Error(`Failed to fetch community posts: ${res.status}`);
+    }
+    const json = (await res.json()) as { code: number; data?: { posts: CommunityPost[]; total: number }; message?: string };
+    if (json.code !== 0 || !json.data) {
+      throw new Error(json.message || "Invalid community posts response");
+    }
+    return {
+      posts: json.data.posts || [],
+      total: json.data.total || 0,
+    };
+  }
+
+  async getPost(slug: string): Promise<CommunityPost | null> {
+    const url = `${this.baseUrl}/api/v1/community/posts/${encodeURIComponent(slug)}`;
+    const res = await fetch(url);
+    if (res.status === 404) {
+      return null;
+    }
+    if (!res.ok) {
+      throw new Error(`Failed to fetch community post: ${res.status}`);
+    }
+    const json = (await res.json()) as { code: number; data?: CommunityPost; message?: string };
+    if (json.code !== 0 || !json.data) {
+      return null;
+    }
+    return json.data;
   }
 }
 
@@ -55,9 +86,9 @@ export function shouldServeFixtures(): boolean {
   return false;
 }
 
-export function getCommunityAdapter(): CommunityAdapter {
+export function getCommunityAdapter(baseUrl?: string): CommunityAdapter {
   if (shouldServeFixtures()) {
     return new MockCommunityAdapter();
   }
-  return new EmptyCommunityAdapter();
+  return new ApiCommunityAdapter(baseUrl);
 }

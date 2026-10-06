@@ -1,7 +1,7 @@
 # Alister Blog Community Data Contract & API Specification
 
-> **Phase**: Community Frontend Foundation (Phase 1)  
-> **Status**: Draft / Contract Specification  
+> **Phase**: Community Public Delivery Foundation (Phase 2)  
+> **Status**: Implementation Complete (Local D1 Schema & Edge Delivery Verified)  
 > **Target Backends**: Cloudflare Pages Functions (Edge Public API) & JD Cloud Fastify (`alister-api`)
 
 ---
@@ -16,11 +16,11 @@ Community 是 Alister Blog 的短内容广场（动态、短图文、项目随�
 | :--- | :--- | :--- |
 | **内容形式** | 长文 Markdown / MDX，深度技术或随笔 | 短图文、动态、调试日记、短评、碎碎念 |
 | **权威存储** | 代码仓 `shirones/content/posts/` (Git) | **JD Cloud PostgreSQL** (`alister-api`) |
-| **边缘交付** | Astro SSG 静态预渲染 | **Cloudflare D1** (`alister-public` 只读副本 / 缓存) |
+| **边缘交付** | Astro SSG 静态预渲染 | **Cloudflare D1** (`alister-public` 只读副本) + Pages Functions |
 | **编辑入口** | Git 提交 / 将来 JD Admin Markdown 编辑器 | JD Admin 动态发布模块 |
 | **互动模型** | 浏览量统计 (Views) + 点赞 (Likes) + 评论 | 浏览（第一阶段）→ 点赞与评论（后续阶段） |
 
-### 1.2 数据流向
+### 1.2 数据流向与运行时交付
 
 ```
 [JD Admin / Alister] 
@@ -32,17 +32,20 @@ Community 是 Alister Blog 的短内容广场（动态、短图文、项目随�
         ▼
 [Cloudflare D1 (alister-public)]  <-- 边缘只读分发副本 (Edge Read-Only Replica)
         │
-        │ (Cloudflare Pages Functions)
+        ├── [GET /api/v1/community/posts] (Pages Function)
+        ├── [GET /api/v1/community/posts/:slug] (Pages Function)
+        └── [GET /community/:slug/] (Pages Function: 动态 Shell 代理分发)
+                 │ (ASSETS.fetch -> /community/post/ static shell)
+                 ▼
+[Alister Blog Client (Svelte 5 Runtime)]
+        │ (运行时读取 pathname 并向 D1 API 异步拉取动态详情)
         ▼
-[GET /api/v1/community/posts]
-[GET /api/v1/community/posts/:slug]
-        │
-        ▼
-[Alister Blog Frontend (/community/)]
+[页面无缝呈现]
 ```
 
 > [!IMPORTANT]
 > **权威主源原则**：JD Cloud PostgreSQL 是 Community 数据的唯一写入与权威主库。访客侧边缘 API 与 Cloudflare D1 仅承载只读副本及访客互动计数，不直接承接管理写入。
+> **静态 Shell + 运行时直读**：通过 `functions/community/[slug].ts` 调用 `env.ASSETS.fetch()` 转发至预渲染静态壳 `/community/post/`，无需 Astro 全站 SSR 重构，保持静态 CDN 高速缓存体验。
 
 ---
 
@@ -63,28 +66,25 @@ export interface CommunityAuthor {
   avatar?: string;
 }
 
-export interface CommunityStats {
-  likes?: number;
-  comments?: number;
-}
-
 export interface CommunityPost {
   id: string;
   slug: string;
-  title?: string; // 允许无标题（纯动态）或短标题
+  title: string; // 第一版规范：标题为必填项
   content: string; // 原始 Markdown 格式纯文本
+  contentFormat?: "markdown" | "mdx";
   author: CommunityAuthor;
   createdAt: string; // ISO 8601 字符串 (e.g. "2026-10-06T14:30:00Z")
   updatedAt?: string;
-  images?: CommunityImage[];
-  tags?: string[];
-  stats?: CommunityStats;
+  publishedAt?: string;
+  images: CommunityImage[];
 }
+
+export type CommunityPostSummary = CommunityPost;
+export type CommunityPostDetail = CommunityPost;
 
 export interface ListCommunityPostsOptions {
   limit?: number;
   offset?: number;
-  tag?: string;
 }
 
 export interface ListCommunityPostsResult {
@@ -97,7 +97,7 @@ export interface ListCommunityPostsResult {
 
 ## 3. 边缘 Public API 规范 (Cloudflare Pages Functions)
 
-未来接入真实数据时，边缘 Functions 提供以下两个只读端点：
+边缘 Functions 提供以下两个只读端点：
 
 ### 3.1 动态列表 `GET /api/v1/community/posts`
 
@@ -105,26 +105,29 @@ export interface ListCommunityPostsResult {
 - **Query 参数**:
   - `limit` (optional, integer, default: `20`, max: `50`): 每页数量
   - `offset` (optional, integer, default: `0`): 偏移量
-  - `tag` (optional, string): 按标签筛选
+- **过滤与排序**:
+  - 仅返回 `visibility = 'public'` 的动态。
+  - 按 `published_at DESC, created_at DESC` 降序排列。
 - **响应格式 (JSON)**:
 
 ```json
 {
   "code": 0,
   "data": {
-    "total": 4,
+    "total": 1,
     "posts": [
       {
         "id": "comm_01",
         "slug": "k230-canmv-debug",
         "title": "K230 端侧模型部署与摄像头帧率踩坑记",
         "content": "折腾了几天 CanMV K230 的模型部署...",
+        "contentFormat": "markdown",
         "author": {
           "name": "Alister",
           "avatar": "/images/profile/avatar.webp"
         },
         "createdAt": "2026-10-06T14:30:00Z",
-        "updatedAt": null,
+        "publishedAt": "2026-10-06T14:30:00Z",
         "images": [
           {
             "url": "https://img.alistereno.top/community/k230-board.webp",
@@ -132,12 +135,7 @@ export interface ListCommunityPostsResult {
             "width": 1200,
             "height": 800
           }
-        ],
-        "tags": ["K230", "嵌入式", "边缘AI"],
-        "stats": {
-          "likes": 5,
-          "comments": 2
-        }
+        ]
       }
     ]
   }
@@ -149,6 +147,9 @@ export interface ListCommunityPostsResult {
 - **请求方式**: `GET`
 - **Path 参数**:
   - `slug` (string, required): 动态的唯一 slug
+- **权限与可见性**:
+  - 允许读取 `visibility IN ('public', 'unlisted')`。
+  - 草稿 (`draft`) 或归档 (`archived`) 返回 404。
 - **响应格式 (JSON)**:
 
 ```json
@@ -159,23 +160,21 @@ export interface ListCommunityPostsResult {
     "slug": "k230-canmv-debug",
     "title": "K230 端侧模型部署与摄像头帧率踩坑记",
     "content": "折腾了几天 CanMV K230 的模型部署...",
+    "contentFormat": "markdown",
     "author": {
       "name": "Alister",
       "avatar": "/images/profile/avatar.webp"
     },
     "createdAt": "2026-10-06T14:30:00Z",
-    "updatedAt": null,
+    "publishedAt": "2026-10-06T14:30:00Z",
     "images": [
       {
         "url": "https://img.alistereno.top/community/k230-board.webp",
-        "alt": "K230 开发板调试环境"
+        "alt": "K230 开发板调试环境",
+        "width": 1200,
+        "height": 800
       }
-    ],
-    "tags": ["K230", "嵌入式", "边缘AI"],
-    "stats": {
-      "likes": 5,
-      "comments": 2
-    }
+    ]
   }
 }
 ```
@@ -200,3 +199,52 @@ export interface ListCommunityPostsResult {
 2. **防脏数据原则**:
    - 生产环境构建在未接入真实边缘 API 前，Adapter 返回空列表，呈现友好空状态，绝不在正式生产环境中输出测试 mock 数据。
    - 本地开发与 Playwright E2E 测试环境可通过 `COMMUNITY_USE_FIXTURES=true` 注入完备的测试 fixtures。
+
+---
+
+## 5. D1 边缘只读副本表结构 (D1 Read Replica Schema)
+
+对应 D1 迁移文件：`migrations/0004_community_public.sql`（目前仅限本地开发测试验证，严禁未经授权远程执行）。
+
+### 5.1 `community_posts`
+```sql
+CREATE TABLE IF NOT EXISTS community_posts (
+  id TEXT PRIMARY KEY,
+  slug TEXT NOT NULL UNIQUE,
+  title TEXT NOT NULL,
+  content TEXT NOT NULL,
+  content_format TEXT NOT NULL DEFAULT 'markdown',
+  visibility TEXT NOT NULL DEFAULT 'public',
+  created_at TEXT NOT NULL,
+  updated_at TEXT,
+  published_at TEXT
+);
+
+CREATE INDEX IF NOT EXISTS idx_community_posts_visibility_published
+ON community_posts(visibility, published_at DESC, created_at DESC);
+
+CREATE INDEX IF NOT EXISTS idx_community_posts_slug
+ON community_posts(slug);
+```
+
+### 5.2 `community_post_images`
+```sql
+CREATE TABLE IF NOT EXISTS community_post_images (
+  id TEXT PRIMARY KEY,
+  post_id TEXT NOT NULL REFERENCES community_posts(id) ON DELETE CASCADE,
+  url TEXT NOT NULL,
+  alt_text TEXT,
+  width INTEGER,
+  height INTEGER,
+  sort_order INTEGER NOT NULL DEFAULT 0,
+  created_at TEXT NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_community_post_images_post_sort
+ON community_post_images(post_id, sort_order ASC);
+```
+
+> [!NOTE]
+> - 不在 D1 创建任何管理表、sync_state 或草稿私密数据。
+> - 访客公开列表仅查 `visibility = 'public'`，详情直查允许 `public` 与 `unlisted`。
+> - 严禁在 API 响应中暴露内部字段（如对象存储 key、SQL 细节、错误堆栈）。

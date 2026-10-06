@@ -18,11 +18,13 @@ kpu.load_kmodel("/sdcard/models/yolov8n.kmodel")
 \`\`\`
 
 总体来说性价比很高，接下来打算接上小车底盘做实车测试。`,
+    contentFormat: "markdown",
     author: {
       name: "Alister",
       avatar: "/images/profile/avatar.webp",
     },
     createdAt: "2026-10-06T14:30:00Z",
+    publishedAt: "2026-10-06T14:30:00Z",
     images: [
       {
         url: "/images/moments/scenery/scene-1.webp",
@@ -37,11 +39,6 @@ kpu.load_kmodel("/sdcard/models/yolov8n.kmodel")
         height: 800,
       },
     ],
-    tags: ["K230", "嵌入式", "边缘AI"],
-    stats: {
-      likes: 5,
-      comments: 2,
-    },
   },
   {
     id: "comm_02",
@@ -52,11 +49,13 @@ kpu.load_kmodel("/sdcard/models/yolov8n.kmodel")
 - **DWB 调参心得**：\`PathAlign\` 和 \`GoalDist\` 的权重需要精细平衡，否则小车容易在窄通道里迟疑。
 - **Costmap 更新频率**：局部 costmap 设为 10Hz 时激光雷达点云同步最平滑。
 - 记录了 4 张测试截图，后续实车验证再对比差异。`,
+    contentFormat: "markdown",
     author: {
       name: "Alister",
       avatar: "/images/profile/avatar.webp",
     },
     createdAt: "2026-10-05T18:15:00Z",
+    publishedAt: "2026-10-05T18:15:00Z",
     images: [
       {
         url: "/images/moments/scenery/scene-3.webp",
@@ -83,11 +82,6 @@ kpu.load_kmodel("/sdcard/models/yolov8n.kmodel")
         height: 800,
       },
     ],
-    tags: ["ROS2", "机器人", "仿真"],
-    stats: {
-      likes: 8,
-      comments: 0,
-    },
   },
   {
     id: "comm_03",
@@ -98,11 +92,13 @@ kpu.load_kmodel("/sdcard/models/yolov8n.kmodel")
 > 「即便迷茫，也要发出自己的声音。」
 
 3D 卡通渲染的微表情表现力超出预期，吉他音轨的混音质感也很顶。`,
+    contentFormat: "markdown",
     author: {
       name: "Alister",
       avatar: "/images/profile/avatar.webp",
     },
     createdAt: "2026-10-04T21:00:00Z",
+    publishedAt: "2026-10-04T21:00:00Z",
     images: [
       {
         url: "/images/moments/girls-roll/roll-2.webp",
@@ -111,28 +107,21 @@ kpu.load_kmodel("/sdcard/models/yolov8n.kmodel")
         height: 800,
       },
     ],
-    tags: ["动漫", "随笔"],
-    stats: {
-      likes: 12,
-      comments: 4,
-    },
   },
   {
     id: "comm_04",
     slug: "weekly-random-thoughts",
+    title: "日常碎碎念与代码整理",
     content: `今天整理了一遍博客的代码和自动化脚本，把很多边缘细节顺平了。
 
 有时候写代码就像打扫房间，哪怕别人看不见抽屉里面的整理，自己看着清爽整洁也会很开心。喝杯咖啡，继续搬砖 ☕`,
+    contentFormat: "markdown",
     author: {
       name: "Alister",
       avatar: "/images/profile/avatar.webp",
     },
     createdAt: "2026-10-03T16:20:00Z",
+    publishedAt: "2026-10-03T16:20:00Z",
     images: [],
-    tags: ["日常"],
-    stats: {
-      likes: 3,
-      comments: 1,
-    },
   },
 ];

@@ -18,7 +18,6 @@ const defaultAvatar = "/images/profile/avatar.webp";
 
 const headerArrowStyle = "width:1.5rem;height:1.5rem;background:transparent;color:inherit;";
 const footerIconStyle = "width:1.1rem;height:1.1rem;background:transparent;color:inherit;";
-const heartIconStyle = "width:1.1rem;height:1.1rem;background:transparent;color:var(--primary);";
 ---
 
 <article
@@ -80,34 +79,8 @@ const heartIconStyle = "width:1.1rem;height:1.1rem;background:transparent;color:
     <CommunityImageGrid images={post.images} class="my-3" />
   )}
 
-  {/* Tags */}
-  {post.tags && post.tags.length > 0 && (
-    <div class="community-post-card__tags flex flex-wrap gap-1.5 mt-3 pt-2">
-      {post.tags.map((tag) => (
-        <span class="community-tag-badge inline-flex items-center text-xs px-2.5 py-1 rounded-[var(--shape-corner-s)] bg-[var(--btn-regular-bg)] text-[var(--btn-content)] font-medium">
-          #{tag}
-        </span>
-      ))}
-    </div>
-  )}
-
-  {/* Footer: Stats & Actions */}
-  <footer class="community-post-card__footer flex items-center justify-between mt-4 pt-3 border-t border-[var(--outline-variant)] text-xs sm:text-sm text-[var(--on-surface-variant)]">
-    <div class="flex items-center gap-4">
-      {post.stats?.likes !== undefined && (
-        <span class="inline-flex items-center gap-1" title="点赞数">
-          <MetaIcon icon="material-symbols:favorite-outline-rounded" style={heartIconStyle} />
-          <span>{post.stats.likes}</span>
-        </span>
-      )}
-      {post.stats?.comments !== undefined && (
-        <span class="inline-flex items-center gap-1" title="评论数">
-          <MetaIcon icon="material-symbols:chat-bubble-outline-rounded" style={footerIconStyle} />
-          <span>{post.stats.comments}</span>
-        </span>
-      )}
-    </div>
-
+  {/* Footer: Action */}
+  <footer class="community-post-card__footer flex items-center justify-end mt-4 pt-3 border-t border-[var(--outline-variant)] text-xs sm:text-sm text-[var(--on-surface-variant)]">
     <a
       href={postUrl}
       class="community-post-card__more-link inline-flex items-center gap-1 font-medium text-[var(--primary)] hover:underline"

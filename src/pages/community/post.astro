@@ -1,0 +1,17 @@
+---
+import MainGridLayout from "@layouts/MainGridLayout.astro";
+import { communityConfig } from "@config/communityConfig.ts";
+import CommunityDetailApp from "../../components/community/CommunityDetailApp.svelte";
+
+if (!communityConfig.enable) {
+  return Astro.redirect("/404/");
+}
+
+const pageTitle = "动态详情 - " + (communityConfig.title || "社区");
+---
+
+<MainGridLayout title={pageTitle} description="Alister Blog 社区动态">
+  <div class="community-detail-page max-w-3xl mx-auto py-2">
+    <CommunityDetailApp client:load />
+  </div>
+</MainGridLayout>

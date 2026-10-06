@@ -1,6 +1,6 @@
 /**
  * Community data contracts and DTOs for Alister Blog.
- * Aligned with the planned JD Cloud API and Cloudflare D1 schema.
+ * Aligned with JD Cloud API v1 and Cloudflare D1 Public Read Replica.
  */
 
 export interface CommunityImage {
@@ -15,22 +15,17 @@ export interface CommunityAuthor {
   avatar?: string;
 }
 
-export interface CommunityStats {
-  likes?: number;
-  comments?: number;
-}
-
 export interface CommunityPost {
   id: string;
   slug: string;
-  title?: string;
+  title: string;
   content: string; // Raw Markdown text
+  contentFormat?: "markdown" | "mdx";
   author: CommunityAuthor;
   createdAt: string; // ISO 8601 string
   updatedAt?: string;
-  images?: CommunityImage[];
-  tags?: string[];
-  stats?: CommunityStats;
+  publishedAt?: string;
+  images: CommunityImage[];
 }
 
 export type CommunityPostSummary = CommunityPost;
@@ -39,7 +34,6 @@ export type CommunityPostDetail = CommunityPost;
 export interface ListCommunityPostsOptions {
   limit?: number;
   offset?: number;
-  tag?: string;
 }
 
 export interface ListCommunityPostsResult {

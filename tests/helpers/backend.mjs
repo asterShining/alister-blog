@@ -23,7 +23,7 @@ export async function handler(path) {
 
 export function database() {
   const sql = new DatabaseSync(':memory:');
-  for (const migration of ['0001_public_interactions.sql', '0002_post_views.sql', '0003_comment_rate_limit.sql']) {
+  for (const migration of ['0001_public_interactions.sql', '0002_post_views.sql', '0003_comment_rate_limit.sql', '0004_community_public.sql']) {
     sql.exec(readFileSync(`migrations/${migration}`, 'utf8'));
   }
   return {
@@ -59,12 +59,13 @@ const defaultFetch = async (url, options) => {
   return fetch(url, options);
 };
 
-export function call(fn, DB, method = 'GET', body, cookie, slug = 'hello-alister-blog', envOverrides = {}) {
+export function call(fn, DB, method = 'GET', body, cookie, slug = 'hello-alister-blog', envOverrides = {}, urlOverride) {
   const headers = cookie ? { Cookie: cookie } : {};
+  const requestUrl = urlOverride || `https://example.test/api/v1/test/${slug}`;
   return fn({
     env: { DB, TURNSTILE_SECRET: '1x0000000000000000000000000000000AA', fetch: defaultFetch, ...envOverrides },
     params: { slug },
-    request: new Request(`https://example.test/api/v1/test/${slug}`, {
+    request: new Request(requestUrl, {
       method,
       headers,
       ...(body === undefined ? {} : { body: typeof body === 'string' ? body : JSON.stringify(body) }),

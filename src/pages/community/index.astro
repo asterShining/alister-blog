@@ -1,15 +1,11 @@
 ---
 import MainGridLayout from "@layouts/MainGridLayout.astro";
 import { communityConfig } from "@config/communityConfig.ts";
-import { getCommunityAdapter } from "../../lib/community";
-import CommunityFeed from "../../components/community/CommunityFeed.astro";
+import CommunityFeedApp from "../../components/community/CommunityFeedApp.svelte";
 
 if (!communityConfig.enable) {
   return Astro.redirect("/404/");
 }
-
-const adapter = getCommunityAdapter();
-const { posts } = await adapter.listPosts();
 
 const pageTitle = communityConfig.title || "社区";
 const pageDescription = communityConfig.description;
@@ -26,6 +22,6 @@ const pageDescription = communityConfig.description;
       </p>
     </div>
 
-    <CommunityFeed posts={posts} />
+    <CommunityFeedApp client:load />
   </div>
 </MainGridLayout>

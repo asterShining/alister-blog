@@ -33,9 +33,15 @@
   - Safe Markdown renderer (`src/lib/community/markdown.ts`) with HTML entity escaping and URL protocol sanitization.
   - Responsive image grid (`CommunityImageGrid.astro`) supporting 0, 1, 2, 3, 4, and >4 image layouts on mobile (390px) and desktop (1440px).
   - Theme integration aligned with Summer Blue and Starry Night tokens, friendly empty state (`CommunityEmptyState.astro`), feed card (`CommunityPostCard.astro`), and detail view (`CommunityPostView.astro`).
-  - Typed DTO contracts (`src/lib/community/types.ts`) and adapter layer (`src/lib/community/adapter.ts`) preventing mock fixture leaks into production.
-  - API integration specification documented in `docs/community-contract.md`.
-  - Comprehensive unit tests (`tests/community.test.mjs`) and Playwright E2E coverage (`tests/e2e/community.spec.mjs`).
+- Community Public Delivery Foundation (Phase 2):
+  - Local D1 migration `migrations/0004_community_public.sql` (`community_posts`, `community_post_images`) prepared and tested locally (not applied to remote production).
+  - Public Edge APIs: `GET /api/v1/community/posts` (pagination, visibility=public filter, published_at DESC, total count, image grouping) and `GET /api/v1/community/posts/:slug` (supports public & unlisted, sanitized 404/500).
+  - Cloudflare dynamic route shell `functions/community/[slug].ts` dispatching to `/community/post/` pre-rendered shell via `env.ASSETS.fetch()`, maintaining static CDN performance without full-site SSR.
+  - Client-side runtime fetch with Svelte 5 (`CommunityFeedApp.svelte`, `CommunityDetailApp.svelte`).
+  - Strict DTO alignment (`src/lib/community/types.ts`) with required `title`, `contentFormat`, `images`, and fixed author identity.
+  - Production adapter `ApiCommunityAdapter` (`src/lib/community/adapter.ts`) querying `/api/v1/community/posts`; `MockCommunityAdapter` restricted to local dev/test fixtures.
+  - `public/_routes.json` configured for `/community/*` Functions handling while preserving static caching for `/community/` and `/community/post/`.
+  - Comprehensive verification: unit tests (`tests/community.test.mjs`), D1 backend tests (`tests/community-backend.test.mjs`), Playwright E2E coverage (`tests/e2e/community.spec.mjs`), and smoke tests.
 
 ## Public Backend
 
@@ -43,8 +49,10 @@
 - `GET` / `PUT /api/v1/reactions/:slug`
 - `GET` / `POST /api/v1/views/:slug`
 - `GET` / `POST /api/v1/comments/:slug` (POST requires Turnstile token, enforces rate limiting, returns 201)
+- `GET /api/v1/community/posts` (Edge read replica query)
+- `GET /api/v1/community/posts/:slug` (Edge read replica query for public/unlisted)
 
-Production D1 has migrations 0001, 0002, and 0003 applied. Article pages make at most one Views `POST`, one reactions `GET`, and one comments `GET` per DOM insertion; list pages do not request interaction or comment data.
+Production D1 has migrations 0001, 0002, and 0003 applied. Migration 0004 is local-only pending production migration authorization. Article pages make at most one Views `POST`, one reactions `GET`, and one comments `GET` per DOM insertion; list pages do not request interaction or comment data. Community pages perform client-side runtime fetch only when enabled.
 
 ## Database and Visitor Semantics
 
