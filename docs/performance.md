@@ -272,7 +272,7 @@ site, (b) the physical round trip, and (c) per-request Function/D1 latency.
 | Preloading the CJK font | It is the largest single resource, but `preload: false` is deliberate and the font already uses `display: swap`; preloading would move bytes back onto the critical path. |
 | Consolidating the 58 script requests | Would require changing the theme's chunking (`viteBuildShared.rollupOptions` lives in the theme package) for a low measured benefit. |
 
-## 5b. Cloudflare Pages Preview Validation
+## 6. Cloudflare Pages Preview Validation
 
 `COMMUNITY_ENABLE` is a **Production-only** build variable and the preview
 environment has no usable `DB` binding (`/api/v1/health` 503,
@@ -301,7 +301,7 @@ branch is merged. The API-blocked falsification above (2594 → 861 ms) is the b
 estimate of what Production would do after the fix, because it removes the API
 cost without removing the round trip.
 
-## 6. Open Items (recommended follow-ups)
+## 7. Open Items (recommended follow-ups)
 1. **Mobile CLS 0.105 on the homepage** is above the "good" 0.1 threshold. The
    trajectory cards are inserted asynchronously after the feed response, which
    shifts the article list. Reserving space for the first card, or inserting
@@ -321,7 +321,7 @@ cost without removing the round trip.
    separate look at query plans, indexes, and whether the public list endpoint
    should be edge-cacheable.
 
-## 7. Rules for Future Work
+## 8. Rules for Future Work
 
 - Never register an `async` function directly on a Swup hook that runs inside a
   navigation (`content:replace`, `page:view`, `visit:*`): Swup awaits returned
