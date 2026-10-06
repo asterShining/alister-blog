@@ -30,9 +30,17 @@ Markdown/MDX under `shirones/content/posts/` is the article source of truth. Fol
 
 Community is an independent short-post dynamic square (status updates, debug logs, notes, multi-image posts) completely decoupled from `/posts/` articles:
 - **Authoritative Source**: JD Cloud PostgreSQL (`alister-api`) is the single source of truth for management and writing.
-- **Edge Delivery**: Cloudflare D1 (`alister-public`) serves as the read-only replica.
+- **Edge Delivery**: Cloudflare D1 (`alister-public`) serves as the read-only replica. Private Operator CLI writes PostgreSQL drafts; explicit publish and manual Publisher reconciliation deliver eligible content to D1. The CLI never writes D1.
+- **Production Feature State**: `COMMUNITY_ENABLE` is a build-time variable read by `shirones/config/communityConfig.ts`; `true` or `1` enables Community navigation/routes. Local default remains disabled. Current Production frontend status is **ENABLED** (verified on live origin and canonical deployment `a8f940b0-8c6b-4073-a95d-eeb98e58e609`).
 - **Feature Isolation**: Governed by `shirones/config/communityConfig.ts` with `enable: false` by default. When disabled, the navigation item is removed, `/community/*` redirects to `/404/`, and zero network requests are made.
 - **Hybrid Delivery Architecture**: Static shells `/community/` and `/community/post/` are served from CDN cache (`public/_routes.json`). Dynamic path `/community/[slug]` is rewritten at the edge by `functions/community/[slug].ts` using `env.ASSETS.fetch()` to `/community/post/` without full-site SSR. Svelte 5 client components (`CommunityFeedApp.svelte`, `CommunityDetailApp.svelte`) fetch D1 public APIs at runtime.
+
+### Current Community Handoff (2026-10-07)
+
+- Backend Production pipeline: **PASS**. JD PostgreSQL is authoritative; D1 `alister-public` is the read replica. Migration `0004` is applied. The first real post `community-start` (“社区，也从这里开始”) is published and replicated; feed/detail API acceptance passed with no internal-field leakage.
+- Frontend Production pipeline: **ENABLED & PASS**. Verified on live origin `https://alistereno.top`: desktop/mobile navigation displays “社区”, `/community/` displays the first post card, and `/community/community-start/` displays full Markdown content. Canonical deployment is `a8f940b0-8c6b-4073-a95d-eeb98e58e609` (commit `7f68d17a72d4597fca4fc0127356cc7e32ccca58`).
+- Blog Production `main`: `7f68d17a72d4597fca4fc0127356cc7e32ccca58`. Development `dev`: clean, tracking `origin/dev`.
+- Next potential directions: R2 media pipeline, Community Likes & Comments, private Admin UI, or new regular blog articles. Image uploads, Community writes, and automatic sync remain out of scope for the current stage.
 
 ## Public APIs, Privacy, and Migrations
 
@@ -61,7 +69,6 @@ Current Pages Functions endpoints are:
   - `0001_public_interactions.sql`: `reactions`, `comments`
   - `0002_post_views.sql`: `post_views` (deduplicated by fixed 30-min bucket)
   - `0003_comment_rate_limit.sql`: rate limiting index `idx_comments_visitor_created` on `comments(visitor_id, created_at)`
-- **Local Development Only**:
   - `0004_community_public.sql`: `community_posts`, `community_post_images` (Public Read Replica)
 - **Migration Rules**:
   - Never edit a migration that has been applied to production. Add a new migration for schema changes.

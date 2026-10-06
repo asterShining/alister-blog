@@ -1,0 +1,212 @@
+---
+/**
+ * 归档分类栏（Archive / Article Category Bar）。
+ *
+ * 职责（冻结）：
+ * - 归档页的“首页 / 归档”入口 + 文章分类 chips（当前文章分类弱高亮）；
+ * - 它是“文章分类 / 归档相关 UI”，不承载首页内容类型筛选。
+ *
+ * 明确不承载（勿回退）：
+ * - 全部 | 文章 | 轨迹 → 属于 `ContentTypeFilter.astro`（首页 Content Type Filter）；
+ * - 文章 | 检索 → 属于 /posts/ 页面自己的 View Switcher。
+ *
+ * 页面范围：仅 `/archive/` 可见。首页、/posts/、/community/、/friends/、/about/、
+ * /tags/、文章详情等页面本栏一律不出现。
+ *
+ * 挂载方式：主题布局把它静态渲染在 Swup 容器之外，页面切换时不会自动重渲染，
+ * 因此可见性由 `src/scripts/page-scoped-chrome.ts` 统一同步（首屏 + 每次 Swup 切换）。
+ *
+ * 视觉：磨砂玻璃辅助条（frosted glass auxiliary bar）——比文章卡 / ArchivePanel
+ * 轻一级的辅助层。表面（surface / border / shadow / blur）由
+ * `src/styles/themes/starry.css` 的 `--theme-aux-*` 主题令牌驱动，本文件只负责
+ * 布局、条目交互态与计数 badge，因此 Summer / Starry 不出现两套重复 CSS。
+ *
+ * 注意：主题的 `.m3-chip--tonal` 等样式带 `[data-astro-cid-…]` 作用域，只对 Chip
+ * 组件自己渲染的元素生效；本组件直接写 <a> 时那些类名不产生任何样式（曾因此整条
+ * 栏退化成纯文本）。所以条目外观在这里自行定义，交互反馈复用全局
+ * `.m3-state-layer`（站内统一的 hover / focus / pressed 状态层）。
+ */
+import I18nKey from "@i18n/i18nKey";
+import { i18n } from "@i18n/translation";
+import { getCategoryList } from "@utils/content-utils";
+import { pathsEqual, url } from "@utils/url-utils";
+
+interface Props {
+	/** 文章页所属分类名：归档页对该分类做弱高亮 */
+	currentPostCategory?: string;
+}
+
+const { currentPostCategory } = Astro.props;
+
+const categories = await getCategoryList();
+const homeUrl = url("/");
+const archiveUrl = url("/archive/");
+
+const pathname = Astro.url.pathname;
+const isArchive = pathsEqual(pathname, archiveUrl);
+const postCategory = (currentPostCategory || "").trim();
+
+const softCategory = !isArchive && postCategory ? postCategory : "";
+---
+
+<nav
+	id="category-bar-region"
+	aria-label="归档与文章分类"
+	class="category-bar-nav"
+	class:list={{ hidden: !isArchive }}
+>
+	<!-- 磨砂玻璃容器：比卡片轻一级的辅助层，见 starry.css 的 --theme-aux-* -->
+	<div id="category-bar" class="category-bar onload-animation">
+		<div class="category-bar-links hide-scrollbar">
+			<a
+				href={homeUrl}
+				class="category-bar__item category-bar__item--icon m3-state-layer"
+				aria-label={i18n(I18nKey.home)}
+			>
+				<svg class="category-bar__icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+					<path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z" />
+				</svg>
+				<span class="category-bar__label">{i18n(I18nKey.home)}</span>
+			</a>
+
+			<a
+				href={archiveUrl}
+				class:list={[
+					"category-bar__item m3-state-layer",
+					{ "category-bar__item--active": isArchive },
+				]}
+				aria-current={isArchive ? "page" : undefined}
+			>
+				<span class="category-bar__label">{i18n(I18nKey.archive)}</span>
+			</a>
+
+			<span class="category-bar__divider" aria-hidden="true"></span>
+
+			<div
+				class="category-bar-categories"
+				id="category-bar-categories"
+			>
+				{categories.map((cat) => (
+					<a
+						href={cat.url}
+						class:list={[
+							"category-bar__item m3-state-layer",
+							{ "category-bar__item--soft": cat.name === softCategory },
+						]}
+					>
+						<span class="category-bar__label">{cat.name}</span>
+						<span class="category-bar__count" aria-hidden="true">{cat.count}</span>
+					</a>
+				))}
+			</div>
+		</div>
+	</div>
+</nav>
+
+<style lang="stylus">
+/* 与 Hero / ArchivePanel 之间的呼吸感：不再靠若干零散 margin 堆叠 */
+.category-bar-nav
+	position: relative
+	margin-block: 0.25rem 1.25rem
+
+.category-bar
+	/* 表面（背景 / 边框 / 阴影 / blur）在 starry.css，由主题令牌驱动 */
+	display: block
+	padding: 0.5rem 0.6rem
+	border-radius: var(--shape-corner-l, 16px)
+
+.category-bar-links
+	display: flex
+	align-items: center
+	gap: 0.5rem
+	overflow-x: auto
+	white-space: nowrap
+	-webkit-overflow-scrolling: touch
+
+.category-bar-categories
+	display: flex
+	align-items: center
+	gap: 0.5rem
+
+.category-bar__divider
+	flex: 0 0 auto
+	width: 1px
+	height: 1.4rem
+	background: var(--outline)
+	opacity: 0.55
+
+/* 条目：真正的交互单元（内边距 / 圆角 / 过渡），不再像纯文本 */
+.category-bar__item
+	display: inline-flex
+	align-items: center
+	gap: 0.5rem
+	flex: 0 0 auto
+	min-height: 2.25rem
+	padding: 0.3rem 0.9rem
+	border-radius: var(--shape-corner-full, 9999px)
+	border: 1px solid transparent
+	background: var(--btn-regular-bg)
+	color: var(--btn-content)
+	font: var(--m3e-type-label-large)
+	font-weight: 600
+	text-decoration: none
+	white-space: nowrap
+	--m3e-state-color: var(--on-surface-variant)
+
+	&:hover
+		background: var(--btn-regular-bg-hover)
+		border-color: var(--outline-variant)
+		color: var(--on-surface)
+
+	&--icon
+		padding-inline-start: 0.75rem
+
+	/* 当前页：实底 accent + 高对比文字 + 轻微描边/光晕，不只靠颜色深浅 */
+	&--active
+		background: var(--primary)
+		/* Stylus 里 `in` 是运算符，color-mix 必须 unquote（同主题 Chip.astro 的写法） */
+		border-color: unquote("color-mix(in srgb, var(--primary) 58%, transparent)")
+		color: var(--on-primary)
+		box-shadow: 0 2px 10px unquote("color-mix(in srgb, var(--primary) 34%, transparent)")
+		--m3e-state-color: var(--on-primary)
+
+		&:hover
+			background: var(--primary)
+			border-color: unquote("color-mix(in srgb, var(--primary) 72%, transparent)")
+			color: var(--on-primary)
+
+	/* 文章详情页所属分类的弱高亮（原 m3-chip--soft 语义） */
+	&--soft
+		background: var(--primary-container)
+		color: var(--on-primary-container)
+		--m3e-state-color: var(--on-primary-container)
+
+.category-bar__icon
+	width: 1rem
+	height: 1rem
+	flex-shrink: 0
+	opacity: 0.9
+
+.category-bar__label
+	line-height: 1
+
+/* 计数 badge：独立 capsule，与文字有明确 gap，不抢主标签 */
+.category-bar__count
+	display: inline-flex
+	align-items: center
+	justify-content: center
+	flex-shrink: 0
+	min-width: 1.25rem
+	height: 1.25rem
+	padding: 0 0.3rem
+	border-radius: var(--shape-corner-full, 9999px)
+	background: var(--btn-regular-bg-active)
+	color: var(--btn-content)
+	font-size: 0.7rem
+	font-weight: 700
+	line-height: 1
+
+.category-bar__item--active .category-bar__count
+	background: var(--on-primary)
+	color: var(--primary)
+</style>

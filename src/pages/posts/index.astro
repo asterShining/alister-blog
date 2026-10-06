@@ -1,0 +1,231 @@
+---
+/**
+ * 文章主页：
+ * - 顶部专属 Header 与 Segmented Control（文章 | 检索 视图切换）；
+ * - 默认展示文章视觉 Card 完整流（Visual Article Card Feed）；
+ * - 检索视图：保留原年份、分类、标签检索面板（ArchivePanel）；
+ * - 两者共享底层 getSortedPosts / getSortedPostsList 单一数据源。
+ */
+import Card from "@components/atoms/display/Card.svelte";
+import PostCard from "@components/organisms/PostCard.astro";
+import ArchivePanel from "@components/organisms/ArchivePanel.svelte";
+import I18nKey from "@i18n/i18nKey";
+import { i18n } from "@i18n/translation";
+import MainGridLayout from "@layouts/MainGridLayout.astro";
+import { getSortedPosts, getSortedPostsList } from "@utils/content-utils";
+import { getPostUrl } from "@utils/url-utils";
+import { POST_CARD_MIN_WIDTH, postListConfig } from "@/config/postListConfig";
+
+const allBlogPosts = await getSortedPosts();
+const sortedPostsList = await getSortedPostsList();
+const archiveSummary = `${sortedPostsList.length} ${i18n(I18nKey.postsCount)}`;
+
+const { mode, cover, cardWidth } = postListConfig.layout;
+---
+
+<MainGridLayout title="文章" description={archiveSummary} page="archive">
+  <!-- 文章专栏头部：标题 + 明确的 Segmented Control 切换器 -->
+  <Card color="var(--card-bg)" radius="l" class="posts-page-header onload-animation mb-6 p-4 sm:p-5" id="posts-page-header">
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div class="posts-page-info">
+        <h1 class="text-xl sm:text-2xl font-bold text-[var(--on-surface)] flex items-center gap-2.5 tracking-tight">
+          <svg class="w-6 h-6 text-[var(--primary)] shrink-0" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/>
+          </svg>
+          <span>文章</span>
+          <span class="text-xs sm:text-sm font-normal px-2.5 py-0.5 rounded-full bg-[var(--surface-container-high)] text-[var(--on-surface-variant)] border border-[var(--outline-variant)]">
+            {archiveSummary}
+          </span>
+        </h1>
+        <p class="text-xs sm:text-sm text-[var(--on-surface-variant)] mt-1.5">
+          深入思考与系统记录，支持视觉卡片流与全维度检索。
+        </p>
+      </div>
+
+      <!-- Segmented Control / Tabs 切换器 -->
+      <div class="posts-segmented-control shrink-0" role="tablist" aria-label="文章视图模式" id="posts-view-switch">
+        <button
+          type="button"
+          class="posts-segment-btn posts-segment-btn--active m3-chip--selected"
+          data-posts-tab="feed"
+          id="tab-btn-feed"
+          role="tab"
+          aria-selected="true"
+          aria-controls="posts-feed-pane"
+        >
+          <svg class="w-4 h-4 mr-1.5 shrink-0" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <path d="M4 5h16v2H4zm0 6h16v2H4zm0 6h16v2H4z"/>
+          </svg>
+          <span>文章</span>
+        </button>
+        <button
+          type="button"
+          class="posts-segment-btn"
+          data-posts-tab="search"
+          id="tab-btn-search"
+          role="tab"
+          aria-selected="false"
+          aria-controls="posts-search-pane"
+        >
+          <svg class="w-4 h-4 mr-1.5 shrink-0" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <path d="m19.6 21l-6.3-6.3q-.75.6-1.725.95T9.5 16q-2.725 0-4.612-1.888T3 9.5t1.888-4.612T9.5 3t4.613 1.888T16 9.5q0 1.1-.35 2.075T14.7 13.3l6.3 6.3zM9.5 14q1.875 0 3.188-1.312T14 9.5t-1.312-3.187T9.5 5T6.313 6.313T5 9.5t1.313 3.188T9.5 14"/>
+          </svg>
+          <span>检索</span>
+        </button>
+      </div>
+    </div>
+  </Card>
+
+  <!-- 视图与内容明确分隔线 -->
+  <div class="posts-view-divider border-b border-[var(--outline-variant)] opacity-40 mb-6" aria-hidden="true"></div>
+
+  <!-- 视图 1：文章视觉流（默认） -->
+  <div id="posts-feed-pane" class="posts-tab-pane" role="tabpanel" aria-labelledby="tab-btn-feed">
+    <div class:list={["m3e-post-list-shell", `m3e-post-list-shell--${cardWidth}`]}>
+      <div
+        id="post-list"
+        class:list={[
+          "transition m3e-post-list mb-4",
+          `m3e-post-list--${mode}`,
+          { "m3e-post-list--cover-left": mode === "list" && cover === "left" },
+        ]}
+        data-layout-mode={mode}
+        style={`--post-card-min: ${POST_CARD_MIN_WIDTH[cardWidth]};`}
+      >
+        {allBlogPosts.map((entry) => (
+          <PostCard
+            entry={entry}
+            title={entry.data.title}
+            tags={entry.data.tags}
+            category={entry.data.category}
+            published={entry.data.published}
+            updated={entry.data.updated}
+            pinned={entry.data.pinned}
+            url={getPostUrl(entry)}
+            image={entry.data.image}
+            description={entry.data.description}
+            draft={entry.data.draft}
+            class:list="onload-animation"
+            style=""
+          />
+        ))}
+      </div>
+    </div>
+  </div>
+
+  <!-- 视图 2：检索（年份 / 分类 / 标签） -->
+  <div id="posts-search-pane" class="posts-tab-pane hidden" role="tabpanel" aria-labelledby="tab-btn-search">
+    <ArchivePanel sortedPosts={sortedPostsList} client:load />
+  </div>
+</MainGridLayout>
+
+<style lang="stylus">
+@import "../../styles/breakpoints.styl"
+
+.posts-segmented-control
+	display: inline-flex
+	align-items: center
+	gap: 0.25rem
+	padding: 0.3rem
+	border-radius: var(--shape-corner-full, 9999px)
+	background: var(--btn-regular-bg)
+	border: 1px solid var(--outline-variant)
+	box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.08)
+	user-select: none
+
+.posts-segment-btn
+	display: inline-flex
+	align-items: center
+	justify-content: center
+	gap: 0.375rem
+	min-width: 6.25rem
+	height: 2.25rem
+	padding: 0 1.15rem
+	border-radius: var(--shape-corner-full, 9999px)
+	border: 1px solid transparent
+	background: transparent
+	font-size: 0.875rem
+	font-weight: 600
+	line-height: 1
+	color: var(--on-surface-variant)
+	cursor: pointer
+	white-space: nowrap
+	transition: background-color 0.2s cubic-bezier(0.2, 0, 0, 1),
+		color 0.2s cubic-bezier(0.2, 0, 0, 1),
+		border-color 0.2s cubic-bezier(0.2, 0, 0, 1),
+		box-shadow 0.2s cubic-bezier(0.2, 0, 0, 1)
+
+	svg
+		width: 1.1rem
+		height: 1.1rem
+		opacity: 0.8
+		transition: opacity 0.2s ease, transform 0.2s ease
+
+	&:hover:not(.posts-segment-btn--active)
+		color: var(--on-surface)
+		background: var(--btn-regular-bg-hover)
+		border-color: var(--outline-variant)
+		svg
+			opacity: 1
+			transform: scale(1.04)
+
+	&:active:not(.posts-segment-btn--active)
+		background: var(--btn-regular-bg-active)
+
+	&:focus-visible
+		outline: 2px solid var(--primary)
+		outline-offset: 2px
+
+	&--active
+		background: var(--primary)
+		color: var(--on-primary)
+		border-color: transparent
+		font-weight: 700
+		box-shadow: 0 1px 4px rgba(0, 0, 0, 0.22), 0 1px 2px rgba(0, 0, 0, 0.12)
+
+		svg
+			opacity: 1
+			color: var(--on-primary)
+			fill: var(--on-primary)
+
+		&:hover
+			background: var(--primary)
+			color: var(--on-primary)
+
+@media (max-width: 639px)
+	.posts-segmented-control
+		width: 100%
+	.posts-segment-btn
+		flex: 1 1 0
+		min-width: 0
+		padding: 0 0.75rem
+
+.m3e-post-list-shell
+	container: post-list-layout / inline-size
+
+.m3e-post-list
+	display: flex
+	flex-direction: column
+	gap: var(--m3e-space-4)
+
+activate-post-grid()
+	display: grid
+	grid-template-columns: repeat(auto-fill, minmax(var(--post-card-min, 20rem), 1fr))
+	align-items: start
+	grid-auto-rows: 8px
+	row-gap: 0
+	column-gap: var(--m3e-space-4)
+
+@media (min-width: bp-md)
+	@container post-list-layout (min-width: 41rem)
+		.m3e-post-list-shell--compact .m3e-post-list--grid
+			activate-post-grid()
+
+	@container post-list-layout (min-width: 49rem)
+		.m3e-post-list-shell--regular .m3e-post-list--grid
+			activate-post-grid()
+
+	@container post-list-layout (min-width: 57rem)
+		.m3e-post-list-shell--relaxed .m3e-post-list--grid
+			activate-post-grid()
+</style>

@@ -1,7 +1,7 @@
 # Alister Blog Community Data Contract & API Specification
 
-> **Phase**: Community Public Delivery Foundation (Phase 2)  
-> **Status**: Implementation Complete (Local D1 Schema & Edge Delivery Verified)  
+> **Phase**: Community First Real Post Production Phase
+> **Status**: Production Enabled; first real text post verified (2026-10-07)
 > **Target Backends**: Cloudflare Pages Functions (Edge Public API) & JD Cloud Fastify (`alister-api`)
 
 ---
@@ -198,7 +198,7 @@ export interface ListCommunityPostsResult {
 
 ## 5. D1 边缘只读副本表结构 (D1 Read Replica Schema)
 
-对应 D1 迁移文件：`migrations/0004_community_public.sql`（目前仅限本地开发测试验证，严禁未经授权远程执行）。
+对应 D1 迁移文件：`migrations/0004_community_public.sql`（已应用 Production；禁止修改已应用迁移，后续 remote migration 仍需明确授权）。
 
 ### 5.1 `community_posts`
 ```sql
@@ -242,4 +242,12 @@ CREATE INDEX idx_community_post_images_post_id ON community_post_images(post_id,
 
 JD PostgreSQL 与 D1 public replica 均保存 canonical `object_key`，不保存 resolved URL 或 width/height metadata。Pages Functions 使用可选 `COMMUNITY_MEDIA_BASE_URL` 与规范化 object key 生成 HTTP(S) URL。Browser DTO v1 仅含 `url` 与可选 `alt`，不暴露 object_key。
 
-base 尾部和 key 开头斜杠会规范化；危险协议、路径穿越及非法配置会被拒绝。未配置 media base 时，无图内容正常返回；查到图片则返回脱敏 HTTP 500，不泄漏 key 或环境配置。0004 尚未生产应用，本次直接修正；remote apply 需要单独授权。Community 保持关闭。
+base 尾部和 key 开头斜杠会规范化；危险协议、路径穿越及非法配置会被拒绝。未配置 media base 时，无图内容正常返回；查到图片则返回脱敏 HTTP 500，不泄漏 key 或环境配置。0004 已应用 Production，不得再修改该迁移。Community Production 已开启只读 feed/detail，首帖为 `community-start`；本阶段无图片，未配置 media base，未启用 R2。
+
+## 7. Production 发布边界
+
+私有 Operator CLI 复用 PostgreSQL Repository：create 始终 draft/public/markdown，published_at 为 null；Production create/publish/archive 必须显式 `--confirm-production`。只有 publish 后满足 Publisher eligibility 的内容才会手动同步到 D1。CLI 不直接操作 D1，公开 Pages API 仍只读。
+
+首帖生产验收已验证 draft 隔离、1 insert、live sync、再次 dry-run 0 diff、checkpoint 与公开 DTO。UI 由 Production 普通文本 `COMMUNITY_ENABLE=true` 在构建时启用，须重新构建部署；默认本地配置仍关闭。部署事实见 `docs/project-status.md`。
+
+图片、Community 点赞/评论写入、多人发帖、Admin UI、自动同步不属于已完成阶段。
