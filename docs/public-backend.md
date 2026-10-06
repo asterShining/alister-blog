@@ -11,6 +11,9 @@ Pages Functions lives in `functions/` and uses the existing `DB` D1 binding to `
 - `POST /api/v1/views/:slug`: records this visitor's view for the current fixed 30-minute wall-clock bucket, then returns `{ views }`.
 - `GET /api/v1/comments/:slug`: array of published `{ id, authorName, content, createdAt }`, oldest first.
 - `POST /api/v1/comments/:slug`: `{ authorName, content, turnstileToken }`; returns the created comment with HTTP 201. Trimmed Unicode code-point limits: 1–32 and 1–1000. Requires valid Turnstile token verified via Cloudflare siteverify (`functions/_lib/turnstile.ts`). Enforces anonymous visitor rate limiting: minimum 30 seconds interval and maximum 5 comments per 10 minutes per visitor, returning HTTP 429 when exceeded.
+- `GET /api/v1/community/posts`: paginated public community posts (`limit` default 20, max 50, `offset`, `visibility = 'public'`).
+- `GET /api/v1/community/posts/:slug`: community post detail (`public` and `unlisted`).
+- `GET /community/[slug]`: edge dynamic asset proxy to `/community/post/` static shell via `env.ASSETS.fetch()`.
 
 Slugs must match `[a-zA-Z0-9_-]{1,200}`. Unsupported methods return JSON 405, invalid input JSON 400, internal failures generic JSON 500. Responses are not cached. A validated UUID visitor cookie is reused or generated with HttpOnly, Secure, SameSite=Lax, Path=/ and a one-year lifetime. No fingerprinting, IP tracking, or visitor identifiers are returned in comment JSON.
 
@@ -21,6 +24,7 @@ Comments are rendered strictly as plain text (`textContent` / Astro text escapin
 ```bash
 pnpm typecheck:functions
 pnpm test:backend
+pnpm test:community
 pnpm exec astro check
 pnpm build
 pnpm test:release
@@ -35,8 +39,9 @@ Backend tests execute the actual handlers and migrations against Node 22's in-me
 - `migrations/0001_public_interactions.sql`: creates reactions/comments tables and indexes.
 - `migrations/0002_post_views.sql`: creates `post_views` table with unique constraint and index.
 - `migrations/0003_comment_rate_limit.sql`: creates `idx_comments_visitor_created` on `comments(visitor_id, created_at)` for rate limiting queries.
+- `migrations/0004_community_public.sql`: creates `community_posts` and `community_post_images` for Community read replica.
 
-Migrations 0001 and 0002 are applied to Production `alister-public`. Migration 0003 is currently local only. Do not modify an applied migration; create a new migration for schema changes. Do not apply remote migrations without explicit user authorization, a confirmed target of `alister-public`, and post-apply schema checks.
+Migrations 0001, 0002, and 0003 are applied to Production `alister-public`. Migration 0004 is currently local only. Do not modify an applied migration; create a new migration for schema changes. Do not apply remote migrations without explicit user authorization, a confirmed target of `alister-public`, and post-apply schema checks.
 
 The dashboard binding remains authoritative; binding `DB` does not create tables. Follow `dev → CI → PR → main` and verify deployed health, interaction, and comment routes. Cloudflare Pages Git Integration deploys Functions; GitHub Actions does not deploy them.
 

@@ -10,6 +10,7 @@ pnpm exec playwright install chromium --only-shell
 pnpm exec astro check
 pnpm typecheck:functions
 pnpm test:backend
+pnpm test:community
 pnpm test:release
 pnpm build
 pnpm test:e2e:smoke
