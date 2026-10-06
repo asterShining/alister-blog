@@ -79,7 +79,7 @@ onMount(() => {
       <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
       </svg>
-      <span>返回社区动态</span>
+      <span>返回轨迹</span>
     </a>
   </div>
 
@@ -110,7 +110,7 @@ onMount(() => {
         href="/community/"
         class="inline-flex items-center gap-2 px-5 py-2.5 rounded-[var(--shape-corner-s)] bg-[var(--btn-regular-bg)] text-[var(--btn-content)] font-medium text-sm transition hover:brightness-105"
       >
-        <span>返回社区广场</span>
+        <span>返回轨迹列表</span>
       </a>
     </div>
   {:else if status === "error"}
@@ -245,7 +245,7 @@ onMount(() => {
         <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
         </svg>
-        <span>返回社区广场</span>
+        <span>返回轨迹列表</span>
       </a>
       <a
         href="/"

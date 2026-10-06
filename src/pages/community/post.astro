@@ -7,10 +7,10 @@ if (!communityConfig.enable) {
   return Astro.redirect("/404/");
 }
 
-const pageTitle = "动态详情 - " + (communityConfig.title || "社区");
+const pageTitle = "动态详情 - " + (communityConfig.title || "轨迹");
 ---
 
-<MainGridLayout title={pageTitle} description="Alister Blog 社区动态">
+<MainGridLayout title={pageTitle} description="Alister Blog 轨迹">
   <div class="community-detail-page max-w-3xl mx-auto py-2">
     <CommunityDetailApp client:load />
   </div>

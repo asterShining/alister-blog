@@ -2,6 +2,22 @@ import type { CommunityPost } from "./types.ts";
 
 export const mockCommunityPosts: CommunityPost[] = [
   {
+    id: "comm_00",
+    slug: "community-start",
+    title: "社区，也从这里开始",
+    content: `社区，也从这里开始。
+
+这里主要用来发一些短动态、折腾记录和随想。不一定要写成长文章，但又想留下来的东西，都会放在这里。`,
+    contentFormat: "markdown",
+    author: {
+      name: "Alister",
+      avatar: "/images/profile/avatar.webp",
+    },
+    createdAt: "2026-10-06T15:00:00Z",
+    publishedAt: "2026-10-06T15:00:00Z",
+    images: [],
+  },
+  {
     id: "comm_01",
     slug: "k230-canmv-debug",
     title: "K230 端侧模型部署与摄像头帧率踩坑记",

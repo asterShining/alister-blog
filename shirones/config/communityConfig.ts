@@ -13,6 +13,6 @@ const envEnable =
 
 export const communityConfig: CommunityConfig = withUserConfig("community", {
 	enable: envEnable ? true : false,
-	title: "社区",
+	title: "轨迹",
 	description: "记录一些不一定需要写成长文章，但又想留下来的东西。",
 });

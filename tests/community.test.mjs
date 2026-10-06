@@ -66,8 +66,14 @@ test("renderCommunityMarkdown allows safe links and rejects dangerous protocols"
   assert.ok(unsafeHtml.includes("恶意链接"));
 });
 
-test("mockCommunityPosts contains 4 diverse items with required titles", () => {
-  assert.equal(mockCommunityPosts.length, 4);
+test("mockCommunityPosts contains 5 diverse items with required titles", () => {
+  assert.equal(mockCommunityPosts.length, 5);
+
+  // community-start is the primary trajectory post
+  const startPost = mockCommunityPosts.find((p) => p.slug === "community-start");
+  assert.ok(startPost);
+  assert.equal(startPost.title, "社区，也从这里开始");
+  assert.equal(startPost.images.length, 0);
 
   // K230 has 2 images
   const k230 = mockCommunityPosts.find((p) => p.slug === "k230-canmv-debug");
@@ -95,12 +101,12 @@ test("mockCommunityPosts contains 4 diverse items with required titles", () => {
 test("MockCommunityAdapter lists and filters posts", async () => {
   const adapter = new MockCommunityAdapter();
   const all = await adapter.listPosts();
-  assert.equal(all.total, 4);
-  assert.equal(all.posts.length, 4);
+  assert.equal(all.total, 5);
+  assert.equal(all.posts.length, 5);
 
   const paginated = await adapter.listPosts({ limit: 2, offset: 1 });
   assert.equal(paginated.posts.length, 2);
-  assert.equal(paginated.posts[0].slug, "ros2-nav2-simulation");
+  assert.equal(paginated.posts[0].slug, "k230-canmv-debug");
 
   const single = await adapter.getPost("k230-canmv-debug");
   assert.ok(single);

@@ -1,0 +1,384 @@
+---
+/**
+ * 首页文章与轨迹综合 Feed：
+ * - 顶部内容类型筛选：全部 | 文章 | 轨迹（默认全部）；
+ * - 默认“全部”流合并展示文章与轨迹（按真实发布时间倒序排列）；
+ * - 文章卡片显示 [文章] 徽标，轨迹卡片显示 [轨迹] 徽标；
+ * - 轨迹数据通过客户端动态拉取，API 异常时容错降级，不阻断文章流。
+ */
+import type { CollectionEntry } from "astro:content";
+import Card from "@components/atoms/display/Card.svelte";
+import { getPostUrl } from "@utils/url-utils";
+import { POST_CARD_MIN_WIDTH, postListConfig } from "@/config/postListConfig";
+import PostCard from "@components/organisms/PostCard.astro";
+import { communityConfig } from "@config/communityConfig.ts";
+import { mockCommunityPosts } from "../../lib/community/fixtures";
+
+const { page } = Astro.props;
+
+let delay = 0;
+const interval = 50;
+
+const { mode, cover, cardWidth } = postListConfig.layout;
+const isDev = import.meta.env.DEV;
+const isCommunityEnabled = communityConfig.enable;
+---
+
+<div id="post-page-config" data-community-enabled={isCommunityEnabled ? "true" : "false"} class="hidden"></div>
+
+{isCommunityEnabled && (
+  <Card color="var(--card-bg)" radius="l" class="feed-filter-card onload-animation mb-4 p-2" id="feed-filter-card">
+  <div class="feed-filter-inner flex gap-2 items-center">
+    <button
+      type="button"
+      class="m3-chip m3-chip--tonal m3-chip--selected feed-filter-btn"
+      data-feed-filter="all"
+      id="filter-btn-all"
+    >
+      <span>全部</span>
+    </button>
+    <button
+      type="button"
+      class="m3-chip m3-chip--tonal feed-filter-btn"
+      data-feed-filter="article"
+      id="filter-btn-article"
+    >
+      <span>文章</span>
+    </button>
+    <button
+      type="button"
+      class="m3-chip m3-chip--tonal feed-filter-btn"
+      data-feed-filter="trajectory"
+      id="filter-btn-trajectory"
+    >
+      <span>轨迹</span>
+    </button>
+  </div>
+</Card>
+)}
+
+<!-- 轨迹状态提示（空状态或加载异常时针对轨迹筛选生效） -->
+<div id="trajectory-status-notice" class="hidden mb-4"></div>
+
+<div class:list={["m3e-post-list-shell", `m3e-post-list-shell--${cardWidth}`]}>
+  <div
+    id="post-list"
+    class:list={[
+      "transition m3e-post-list mb-4",
+      `m3e-post-list--${mode}`,
+      { "m3e-post-list--cover-left": mode === "list" && cover === "left" },
+    ]}
+    data-layout-mode={mode}
+    style={`--post-card-min: ${POST_CARD_MIN_WIDTH[cardWidth]};`}
+  >
+    {page.data.map((entry: CollectionEntry<"posts">) => (
+      <PostCard
+        entry={entry}
+        title={entry.data.title}
+        tags={entry.data.tags}
+        category={entry.data.category}
+        published={entry.data.published}
+        updated={entry.data.updated}
+        pinned={entry.data.pinned}
+        url={getPostUrl(entry)}
+        image={entry.data.image}
+        description={entry.data.description}
+        draft={entry.data.draft}
+        class:list="onload-animation"
+        style={`animation-delay: calc(var(--content-delay) + ${delay++ * interval}ms);`}
+      />
+    ))}
+  </div>
+</div>
+
+{isDev && (
+  <script id="community-dev-fixtures" type="application/json" set:html={JSON.stringify(mockCommunityPosts)} />
+)}
+
+<style lang="stylus">
+@import "../../styles/breakpoints.styl"
+.m3e-post-list-shell
+	container: post-list-layout / inline-size
+
+.m3e-post-list
+	display: flex
+	flex-direction: column
+	gap: var(--m3e-space-4)
+
+activate-post-grid()
+	display: grid
+	grid-template-columns: repeat(auto-fill, minmax(var(--post-card-min, 20rem), 1fr))
+	align-items: start
+	grid-auto-rows: 8px
+	row-gap: 0
+	column-gap: var(--m3e-space-4)
+
+@media (min-width: bp-md)
+	@container post-list-layout (min-width: 41rem)
+		.m3e-post-list-shell--compact .m3e-post-list--grid
+			activate-post-grid()
+
+	@container post-list-layout (min-width: 49rem)
+		.m3e-post-list-shell--regular .m3e-post-list--grid
+			activate-post-grid()
+
+	@container post-list-layout (min-width: 57rem)
+		.m3e-post-list-shell--relaxed .m3e-post-list--grid
+			activate-post-grid()
+</style>
+
+<!-- 首屏防闪：布局模式保持原有体验 -->
+<script is:inline>
+(function () {
+	var el = document.getElementById("post-list");
+	if (!el) return;
+	var m = localStorage.getItem("post-list-mode");
+	if (m !== "list" && m !== "grid") return;
+	if (m !== el.getAttribute("data-layout-mode")) {
+		el.classList.remove("m3e-post-list--list", "m3e-post-list--grid");
+		el.classList.add("m3e-post-list--" + m);
+		el.setAttribute("data-layout-mode", m);
+	}
+})();
+</script>
+
+<script>
+import { renderCommunityMarkdown, escapeHtml } from "../../lib/community/markdown";
+import { packMasonry, setupMasonry } from "@utils/masonry";
+
+interface CommunityImage {
+  url: string;
+  alt?: string;
+}
+
+interface TrajectoryPost {
+  id: string;
+  slug: string;
+  title: string;
+  content: string;
+  author: {
+    name: string;
+    avatar?: string;
+  };
+  createdAt: string;
+  publishedAt?: string;
+  images: CommunityImage[];
+}
+
+function initHomeFeed() {
+  const postList = document.getElementById("post-list");
+  if (!postList) return;
+
+  setupMasonry(postList);
+  document.fonts?.ready.then(() => packMasonry(postList));
+
+  const configEl = document.getElementById("post-page-config");
+  const isCommunityEnabled = configEl?.dataset.communityEnabled === "true";
+  if (!isCommunityEnabled) return;
+
+  const filterButtons = document.querySelectorAll<HTMLButtonElement>("[data-feed-filter]");
+  const noticeEl = document.getElementById("trajectory-status-notice");
+  let activeFilter: "all" | "article" | "trajectory" = "all";
+  let trajectoryApiFailed = false;
+
+  function updateCardVisibility() {
+    if (!postList) return;
+    const cards = Array.from(postList.children) as HTMLElement[];
+    let visibleTrajectoryCount = 0;
+
+    cards.forEach((card) => {
+      const type = card.getAttribute("data-card-type");
+      let visible = true;
+      if (activeFilter === "article") {
+        visible = type === "article";
+      } else if (activeFilter === "trajectory") {
+        visible = type === "trajectory";
+      }
+      card.style.display = visible ? "" : "none";
+      if (type === "trajectory" && visible) {
+        visibleTrajectoryCount++;
+      }
+    });
+
+    if (noticeEl) {
+      if (activeFilter === "trajectory" && visibleTrajectoryCount === 0) {
+        noticeEl.classList.remove("hidden");
+        noticeEl.innerHTML = `
+          <div class="rounded-[var(--shape-corner-l)] border border-[var(--outline-variant)] bg-[var(--card-bg)] p-6 text-center text-sm text-[var(--on-surface-variant)]">
+            ${trajectoryApiFailed ? "暂无法获取轨迹数据，请稍后重试。" : "Alister 还没发布任何轨迹记录，过段时间再来看看吧。"}
+          </div>
+        `;
+      } else {
+        noticeEl.classList.add("hidden");
+        noticeEl.innerHTML = "";
+      }
+    }
+
+    if (postList.getAttribute("data-layout-mode") === "grid") {
+      packMasonry(postList);
+    }
+  }
+
+  function setFilter(filter: "all" | "article" | "trajectory") {
+    activeFilter = filter;
+    filterButtons.forEach((btn) => {
+      const isTarget = btn.getAttribute("data-feed-filter") === filter;
+      btn.classList.toggle("m3-chip--selected", isTarget);
+    });
+    updateCardVisibility();
+  }
+
+  filterButtons.forEach((btn) => {
+    btn.onclick = () => {
+      const filter = btn.getAttribute("data-feed-filter") as "all" | "article" | "trajectory";
+      if (filter) setFilter(filter);
+    };
+  });
+
+  function createTrajectoryCard(post: TrajectoryPost): HTMLElement {
+    const card = document.createElement("article");
+    card.className =
+      "community-post-card rounded-[var(--shape-corner-l)] border border-[var(--outline-variant)] bg-[var(--card-bg)] p-4 sm:p-6 transition hover:shadow-md onload-animation";
+    card.setAttribute("data-card-type", "trajectory");
+    card.setAttribute("data-card-date", post.publishedAt || post.createdAt);
+    card.setAttribute("data-card-slug", post.slug);
+
+    const formattedDate = (post.publishedAt || post.createdAt || "").slice(0, 10);
+    const postUrl = `/community/${encodeURIComponent(post.slug)}/`;
+    const avatar = post.author?.avatar || "/images/profile/avatar.webp";
+    const authorName = post.author?.name || "Alister";
+
+    let imageHtml = "";
+    if (post.images && post.images.length > 0) {
+      if (post.images.length === 1) {
+        const img = post.images[0];
+        imageHtml = `
+          <div class="community-image-grid max-w-lg my-3">
+            <a href="${escapeHtml(img.url)}" target="_blank" rel="noopener noreferrer" class="block overflow-hidden rounded-[var(--shape-corner-m)] border border-[var(--outline-variant)]" aria-label="${escapeHtml(img.alt || "查看图片")}">
+              <img src="${escapeHtml(img.url)}" alt="${escapeHtml(img.alt || "")}" loading="lazy" decoding="async" class="w-full max-h-[360px] object-cover transition duration-200 hover:scale-[1.02]" />
+            </a>
+          </div>
+        `;
+      } else {
+        const gridCols = post.images.length === 2 || post.images.length === 4 ? "grid-cols-2" : "grid-cols-3";
+        const imgItems = post.images
+          .map(
+            (img) => `
+          <a href="${escapeHtml(img.url)}" target="_blank" rel="noopener noreferrer" class="block overflow-hidden rounded-[var(--shape-corner-m)] border border-[var(--outline-variant)] aspect-square" aria-label="${escapeHtml(img.alt || "查看图片")}">
+            <img src="${escapeHtml(img.url)}" alt="${escapeHtml(img.alt || "")}" loading="lazy" decoding="async" class="w-full h-full object-cover transition duration-200 hover:scale-[1.03]" />
+          </a>
+        `,
+          )
+          .join("");
+        imageHtml = `<div class="community-image-grid grid ${gridCols} gap-2 sm:gap-3 max-w-2xl my-3">${imgItems}</div>`;
+      }
+    }
+
+    card.innerHTML = `
+      <header class="community-post-card__header flex items-center justify-between mb-3">
+        <div class="flex items-center gap-3 min-w-0">
+          <img src="${escapeHtml(avatar)}" alt="${escapeHtml(authorName)}" class="w-10 h-10 rounded-full object-cover border border-[var(--outline-variant)] flex-shrink-0" loading="lazy" decoding="async" />
+          <div class="min-w-0">
+            <div class="flex items-center gap-2">
+              <span class="font-bold text-[var(--on-surface)] text-sm sm:text-base leading-tight truncate">${escapeHtml(authorName)}</span>
+              <span class="m3-content-badge m3-content-badge--trajectory">轨迹</span>
+            </div>
+            <time datetime="${escapeHtml(post.publishedAt || post.createdAt)}" class="text-xs text-[var(--on-surface-variant)] block mt-0.5">${escapeHtml(formattedDate)}</time>
+          </div>
+        </div>
+        <a href="${postUrl}" class="text-[var(--on-surface-variant)] hover:text-[var(--primary)] transition p-1 rounded-[var(--shape-corner-xs)] inline-flex items-center" aria-label="查看轨迹详情: ${escapeHtml(post.title)}" title="查看详情">
+          <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
+        </a>
+      </header>
+
+      <h2 class="community-post-card__title font-bold text-lg sm:text-xl text-[var(--on-surface)] mb-2.5 leading-snug">
+        <a href="${postUrl}" class="hover:text-[var(--primary)] transition">${escapeHtml(post.title)}</a>
+      </h2>
+
+      <div class="community-post-card__content text-sm sm:text-base leading-relaxed text-[var(--on-surface)]">
+        ${renderCommunityMarkdown(post.content)}
+      </div>
+
+      ${imageHtml}
+
+      <footer class="community-post-card__footer flex items-center justify-end mt-4 pt-3 border-t border-[var(--outline-variant)] text-xs sm:text-sm text-[var(--on-surface-variant)]">
+        <a href="${postUrl}" class="community-post-card__more-link inline-flex items-center gap-1 font-medium text-[var(--primary)] hover:underline">
+          <span>全文详情</span>
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>
+        </a>
+      </footer>
+    `;
+
+    return card;
+  }
+
+  function insertTrajectoryCards(posts: TrajectoryPost[]) {
+    if (!postList) return;
+
+    posts.forEach((post) => {
+      if (postList.querySelector(`[data-card-slug="${post.slug}"]`)) return;
+
+      const card = createTrajectoryCard(post);
+      const postTime = new Date(post.publishedAt || post.createdAt).getTime();
+
+      const children = Array.from(postList.children) as HTMLElement[];
+      let inserted = false;
+      for (const child of children) {
+        const childDateStr = child.getAttribute("data-card-date");
+        if (childDateStr) {
+          const childTime = new Date(childDateStr).getTime();
+          if (postTime > childTime) {
+            postList.insertBefore(card, child);
+            inserted = true;
+            break;
+          }
+        }
+      }
+      if (!inserted) {
+        postList.appendChild(card);
+      }
+    });
+
+    updateCardVisibility();
+  }
+
+  async function loadTrajectoryFeed() {
+    try {
+      const res = await fetch("/api/v1/community/posts?limit=50");
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const json = await res.json();
+      if (json && json.code === 0 && Array.isArray(json.data?.posts)) {
+        insertTrajectoryCards(json.data.posts);
+        return;
+      }
+      throw new Error(json?.message || "Invalid payload");
+    } catch {
+      // 检查是否有本地测试/开发夹具（零破坏降级）
+      const fixturesScript = document.getElementById("community-dev-fixtures");
+      if (fixturesScript && fixturesScript.textContent) {
+        try {
+          const fixtures = JSON.parse(fixturesScript.textContent) as TrajectoryPost[];
+          if (Array.isArray(fixtures)) {
+            insertTrajectoryCards(fixtures);
+            return;
+          }
+        } catch {}
+      }
+      trajectoryApiFailed = true;
+      updateCardVisibility();
+    }
+  }
+
+  loadTrajectoryFeed();
+}
+
+initHomeFeed();
+
+if (window.swup?.hooks) {
+  window.swup.hooks.on("content:replace", initHomeFeed);
+} else {
+  document.addEventListener("swup:enable", () => {
+    window.swup?.hooks?.on("content:replace", initHomeFeed);
+  });
+}
+</script>

@@ -39,6 +39,12 @@ export const LinkPresets: Record<string, NavBarLink> = {
 		icon: "material-symbols:home-outline-rounded",
 		pageKey: "home",
 	},
+	Posts: {
+		name: "文章",
+		url: "/posts/",
+		icon: "material-symbols:article-outline-rounded",
+		pageKey: "posts",
+	},
 	Archive: {
 		name: i18n(I18nKey.archive),
 		url: "/archive/",
@@ -124,7 +130,7 @@ export const LinkPresets: Record<string, NavBarLink> = {
 		pageKey: "series",
 	},
 	Community: {
-		name: communityConfig.title || "社区",
+		name: communityConfig.title || "轨迹",
 		url: "/community/",
 		icon: "material-symbols:forum-outline-rounded",
 		pageKey: "community",
@@ -147,11 +153,10 @@ export const LinkPresets: Record<string, NavBarLink> = {
 const defaultNavBarConfig: NavBarConfig = {
 	links: [
 		LinkPresets.Home,
-		// Shirone's archive route is the available article index.
-		LinkPresets.Archive,
+		LinkPresets.Posts,
 		LinkPresets.Tags,
 		LinkPresets.Community,
-		LinkPresets.Anime,
+		LinkPresets.Archive,
 		LinkPresets.Friends,
 		LinkPresets.About,
 	],

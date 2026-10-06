@@ -1,0 +1,181 @@
+---
+/**
+ * 文章主页：
+ * - 默认展示文章视觉 Card 完整流（Visual Article Card Feed）；
+ * - “文章 | 检索”切换：保留原年份、分类、标签紧凑列表作为“检索”视图；
+ * - 两者共享底层 getSortedPosts / getSortedPostsList 单一数据源。
+ */
+import Card from "@components/atoms/display/Card.svelte";
+import PostCard from "@components/organisms/PostCard.astro";
+import ArchivePanel from "@components/organisms/ArchivePanel.svelte";
+import I18nKey from "@i18n/i18nKey";
+import { i18n } from "@i18n/translation";
+import MainGridLayout from "@layouts/MainGridLayout.astro";
+import { getSortedPosts, getSortedPostsList } from "@utils/content-utils";
+import { getPostUrl } from "@utils/url-utils";
+import { POST_CARD_MIN_WIDTH, postListConfig } from "@/config/postListConfig";
+
+const allBlogPosts = await getSortedPosts();
+const sortedPostsList = await getSortedPostsList();
+const archiveSummary = `${sortedPostsList.length} ${i18n(I18nKey.postsCount)}`;
+
+const { mode, cover, cardWidth } = postListConfig.layout;
+---
+
+<MainGridLayout title="文章" description={archiveSummary} page="archive">
+  <!-- 文章 | 检索 视图切换 -->
+  <Card color="var(--card-bg)" radius="l" class="posts-view-switch onload-animation mb-4 p-2" id="posts-view-switch">
+    <div class="posts-view-inner flex gap-2 items-center">
+      <button
+        type="button"
+        class="m3-chip m3-chip--tonal m3-chip--selected posts-tab-btn"
+        data-posts-tab="feed"
+        id="tab-btn-feed"
+      >
+        <span>文章</span>
+      </button>
+      <button
+        type="button"
+        class="m3-chip m3-chip--tonal posts-tab-btn"
+        data-posts-tab="search"
+        id="tab-btn-search"
+      >
+        <span>检索</span>
+      </button>
+    </div>
+  </Card>
+
+  <!-- 视图 1：文章视觉流（默认） -->
+  <div id="posts-feed-pane" class="posts-tab-pane">
+    <div class:list={["m3e-post-list-shell", `m3e-post-list-shell--${cardWidth}`]}>
+      <div
+        id="post-list"
+        class:list={[
+          "transition m3e-post-list mb-4",
+          `m3e-post-list--${mode}`,
+          { "m3e-post-list--cover-left": mode === "list" && cover === "left" },
+        ]}
+        data-layout-mode={mode}
+        style={`--post-card-min: ${POST_CARD_MIN_WIDTH[cardWidth]};`}
+      >
+        {allBlogPosts.map((entry) => (
+          <PostCard
+            entry={entry}
+            title={entry.data.title}
+            tags={entry.data.tags}
+            category={entry.data.category}
+            published={entry.data.published}
+            updated={entry.data.updated}
+            pinned={entry.data.pinned}
+            url={getPostUrl(entry)}
+            image={entry.data.image}
+            description={entry.data.description}
+            draft={entry.data.draft}
+            class:list="onload-animation"
+            style=""
+          />
+        ))}
+      </div>
+    </div>
+  </div>
+
+  <!-- 视图 2：检索（年份 / 分类 / 标签） -->
+  <div id="posts-search-pane" class="posts-tab-pane hidden">
+    <ArchivePanel sortedPosts={sortedPostsList} client:load />
+  </div>
+</MainGridLayout>
+
+<style lang="stylus">
+@import "../../styles/breakpoints.styl"
+
+.m3e-post-list-shell
+	container: post-list-layout / inline-size
+
+.m3e-post-list
+	display: flex
+	flex-direction: column
+	gap: var(--m3e-space-4)
+
+activate-post-grid()
+	display: grid
+	grid-template-columns: repeat(auto-fill, minmax(var(--post-card-min, 20rem), 1fr))
+	align-items: start
+	grid-auto-rows: 8px
+	row-gap: 0
+	column-gap: var(--m3e-space-4)
+
+@media (min-width: bp-md)
+	@container post-list-layout (min-width: 41rem)
+		.m3e-post-list-shell--compact .m3e-post-list--grid
+			activate-post-grid()
+
+	@container post-list-layout (min-width: 49rem)
+		.m3e-post-list-shell--regular .m3e-post-list--grid
+			activate-post-grid()
+
+	@container post-list-layout (min-width: 57rem)
+		.m3e-post-list-shell--relaxed .m3e-post-list--grid
+			activate-post-grid()
+</style>
+
+<script is:inline>
+(() => {
+  function initPostsTabs() {
+    const feedBtn = document.getElementById("tab-btn-feed");
+    const searchBtn = document.getElementById("tab-btn-search");
+    const feedPane = document.getElementById("posts-feed-pane");
+    const searchPane = document.getElementById("posts-search-pane");
+
+    if (!feedBtn || !searchBtn || !feedPane || !searchPane) return;
+
+    function setTab(tab) {
+      if (tab === "search") {
+        feedBtn.classList.remove("m3-chip--selected");
+        searchBtn.classList.add("m3-chip--selected");
+        feedPane.classList.add("hidden");
+        searchPane.classList.remove("hidden");
+      } else {
+        searchBtn.classList.remove("m3-chip--selected");
+        feedBtn.classList.add("m3-chip--selected");
+        searchPane.classList.add("hidden");
+        feedPane.classList.remove("hidden");
+      }
+    }
+
+    // URL 参数判定：若包含 ?tab=search 或 ?category= / ?tag= / ?uncategorized，切到检索
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("tab") === "search" || params.has("category") || params.has("tag") || params.has("uncategorized")) {
+      setTab("search");
+    } else {
+      setTab("feed");
+    }
+
+    feedBtn.onclick = () => {
+      setTab("feed");
+      const url = new URL(window.location.href);
+      url.searchParams.delete("tab");
+      url.searchParams.delete("category");
+      url.searchParams.delete("tag");
+      url.searchParams.delete("uncategorized");
+      window.history.replaceState({}, "", url.pathname);
+    };
+
+    searchBtn.onclick = () => {
+      setTab("search");
+      const url = new URL(window.location.href);
+      url.searchParams.set("tab", "search");
+      window.history.replaceState({}, "", url.toString());
+    };
+  }
+
+  initPostsTabs();
+
+  if (window.swup?.hooks) {
+    window.swup.hooks.on("content:replace", initPostsTabs);
+  } else {
+    document.addEventListener("swup:enable", () => {
+      window.swup?.hooks?.on("content:replace", initPostsTabs);
+    });
+  }
+})();
+</script>
