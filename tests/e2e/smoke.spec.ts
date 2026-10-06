@@ -16,7 +16,20 @@ test("@smoke main content routes render from the production build", async ({ pag
 	await expect(page.locator(".tag-index__chip:visible").filter({ hasText: "Astro" })).toBeVisible();
 
 	await page.goto("/friends/");
-	await expect(page.locator(".page-header__subtitle")).toHaveText("友链正在整理中，欢迎稍后再来看看。");
+	await expect(page.locator(".page-header__subtitle")).toHaveText("这里收录一些朋友的博客，欢迎去看看。");
+
+	const neomelt = page.getByRole("link", { name: "Neomelt's Blog", exact: true });
+	const evilKnight = page.getByRole("link", { name: "evil0knight's Blog", exact: true });
+	await expect(neomelt).toBeVisible();
+	await expect(neomelt).toHaveAttribute("href", "https://neomelt.cloud");
+	await expect(neomelt).toContainText("Keep looking, don't settle");
+	await expect(evilKnight).toBeVisible();
+	await expect(evilKnight).toHaveAttribute("href", "https://evil0knight.github.io/quartz/");
+	await expect(evilKnight).toContainText("嵌入式软件,笔记博客,欢迎交流");
+	for (const link of [neomelt, evilKnight]) {
+		await expect(link).toHaveAttribute("target", "_blank");
+		await expect(link).toHaveAttribute("rel", "noopener noreferrer");
+	}
 
 	await page.goto("/about/");
 	await expect(page.getByText("这里是 Alister 的个人空间", { exact: false })).toBeVisible();
