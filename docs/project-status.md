@@ -14,7 +14,7 @@
 - Formal Alister content and removal of Shirone demo posts.
 - GitHub Actions CI, SemVer release commands, and main-based GitHub Release workflow.
 - Public Cloudflare Pages Functions for health, reactions, views, and comments.
-- D1 migrations `0001_public_interactions.sql`, `0002_post_views.sql`, and `0003_comment_rate_limit.sql` (all applied to production `alister-public`).
+- D1 migrations `0001_public_interactions.sql`, `0002_post_views.sql`, `0003_comment_rate_limit.sql`, and `0004_community_public.sql` (all applied to production `alister-public`).
 - Article page Views and Like UI; current UI intentionally exposes Like only.
 - Article page Comments UI (Phase 2B):
   - Cloudflare Turnstile bot protection with server-side siteverify (`functions/_lib/turnstile.ts`).
@@ -34,7 +34,7 @@
   - Responsive image grid (`CommunityImageGrid.astro`) supporting 0, 1, 2, 3, 4, and >4 image layouts on mobile (390px) and desktop (1440px).
   - Theme integration aligned with Summer Blue and Starry Night tokens, friendly empty state (`CommunityEmptyState.astro`), feed card (`CommunityPostCard.astro`), and detail view (`CommunityPostView.astro`).
 - Community Public Delivery Foundation (Phase 2):
-  - Local D1 migration `migrations/0004_community_public.sql` (`community_posts`, `community_post_images`) prepared and tested locally (not applied to remote production).
+  - D1 migration `migrations/0004_community_public.sql` (`community_posts`, `community_post_images`) applied to Production and schema verified.
   - Public Edge APIs: `GET /api/v1/community/posts` (pagination, visibility=public filter, published_at DESC, total count, image grouping) and `GET /api/v1/community/posts/:slug` (supports public & unlisted, sanitized 404/500).
   - Cloudflare dynamic route shell `functions/community/[slug].ts` dispatching to `/community/post/` pre-rendered shell via `env.ASSETS.fetch()`, maintaining static CDN performance without full-site SSR.
   - Client-side runtime fetch with Svelte 5 (`CommunityFeedApp.svelte`, `CommunityDetailApp.svelte`).
@@ -42,6 +42,21 @@
   - Production adapter `ApiCommunityAdapter` (`src/lib/community/adapter.ts`) querying `/api/v1/community/posts`; `MockCommunityAdapter` restricted to local dev/test fixtures.
   - `public/_routes.json` configured for `/community/*` Functions handling while preserving static caching for `/community/` and `/community/post/`.
   - Comprehensive verification: unit tests (`tests/community.test.mjs`), D1 backend tests (`tests/community-backend.test.mjs`), Playwright E2E coverage (`tests/e2e/community.spec.mjs`), and smoke tests.
+
+## Community First Real Post Production Phase — PASS (2026-10-07)
+
+- Community: **Production Enabled**; first post: `community-start` — “社区，也从这里开始”.
+- Authoritative: JD PostgreSQL; Public Replica: Cloudflare D1 `alister-public`.
+- Publishing: **manual private Operator CLI + manual Publisher sync**. Create is draft-first; Production writes require `--confirm-production`. There is no automatic scheduler.
+- API PR [#3](https://github.com/asterShining/alister-api/pull/3), operator commit `5542c18488118ed2fe783b5eae2655924dc1821a`; API main/JD deployed HEAD `4a6f48e6a8ee7b2feee48db3c208a471805be914`.
+- Blog delivery PR [#11](https://github.com/asterShining/alister-blog/pull/11), Production main `7f68d17a72d4597fca4fc0127356cc7e32ccca58`. Enabled rebuild deployment: `a7c6546c-c2a3-4c53-b95c-19efa6c898da` (success, same main commit).
+- `COMMUNITY_ENABLE=true` is a Production **plain-text build-time** variable; local defaults and Preview configuration were preserved.
+- Production Empty Pipeline completed previously. This phase verified draft isolation, 1-insert dry-run/live sync, second dry-run 0 diff, and one valid advanced checkpoint.
+- PostgreSQL Community posts: 0 → 1, published/public/Markdown. D1 Community posts: 0 → 1; images: 0 → 0. No extra Community content was created.
+- Public API feed total=1, detail correct, missing detail 404; no internal field leakage.
+- Production UI: feed/detail/navigation/Markdown/author/date/return navigation verified; Summer Blue and Starry Night at 390/768/1440px, no horizontal overflow or hydration errors.
+- Article Views/Like, Comments GET/UI, Turnstile widget, Friends, About, and theme persistence verified. No comment submitted during acceptance.
+- Images/R2/media base, Community Likes/Comments, multi-user posting, Admin UI, and automatic cron sync remain **not enabled**. Further capabilities require a separately defined and authorized phase.
 
 ## Public Backend
 
@@ -52,7 +67,7 @@
 - `GET /api/v1/community/posts` (Edge read replica query)
 - `GET /api/v1/community/posts/:slug` (Edge read replica query for public/unlisted)
 
-Production D1 has migrations 0001, 0002, and 0003 applied. Migration 0004 is local-only pending production migration authorization. Article pages make at most one Views `POST`, one reactions `GET`, and one comments `GET` per DOM insertion; list pages do not request interaction or comment data. Community pages perform client-side runtime fetch only when enabled.
+Production D1 has migrations 0001–0004 applied. Community is Production Enabled with read-only feed/detail APIs and UI. Article pages make at most one Views `POST`, one reactions `GET`, and one comments `GET` per DOM insertion; list pages do not request interaction or comment data. Community pages perform client-side runtime fetch only when enabled.
 
 ## Database and Visitor Semantics
 

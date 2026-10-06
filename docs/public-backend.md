@@ -1,6 +1,6 @@
 # Public Backend
 
-Pages Functions lives in `functions/` and uses the existing `DB` D1 binding to `alister-public`. Only `/api/*` invokes Functions (`public/_routes.json`, copied to `dist/` by Astro). Astro preview serves the frontend; it does not execute Pages Functions.
+Pages Functions lives in `functions/` and uses the existing `DB` D1 binding to `alister-public`. `/api/*` and dynamic `/community/*` invoke Functions; `/community/`, `/community/index.html`, and `/community/post/*` are excluded to serve static shells (`public/_routes.json`, copied to `dist/` by Astro). Astro preview serves the frontend; it does not execute Pages Functions.
 
 ## API
 
@@ -41,7 +41,7 @@ Backend tests execute the actual handlers and migrations against Node 22's in-me
 - `migrations/0003_comment_rate_limit.sql`: creates `idx_comments_visitor_created` on `comments(visitor_id, created_at)` for rate limiting queries.
 - `migrations/0004_community_public.sql`: creates `community_posts` and `community_post_images` for Community read replica.
 
-Migrations 0001, 0002, and 0003 are applied to Production `alister-public`. Migration 0004 is currently local only. Do not modify an applied migration; create a new migration for schema changes. Do not apply remote migrations without explicit user authorization, a confirmed target of `alister-public`, and post-apply schema checks.
+Migrations 0001–0004 are applied to Production `alister-public`. Do not modify an applied migration; create a new migration for schema changes. Do not apply remote migrations without explicit user authorization, a confirmed target of `alister-public`, and post-apply schema checks.
 
 The dashboard binding remains authoritative; binding `DB` does not create tables. Follow `dev → CI → PR → main` and verify deployed health, interaction, and comment routes. Cloudflare Pages Git Integration deploys Functions; GitHub Actions does not deploy them.
 
@@ -59,3 +59,11 @@ The local `molecules/PostMeta` override adds a small article-only interaction ba
 - **Client Lifecycle & Swup**: `src/scripts/post-comments.ts` manages custom element `alister-post-comments`. The Turnstile explicit API script is loaded at most once; widgets are rendered per DOM mount and cleaned up on unmount. Nicknames are optionally remembered in `localStorage` under `alister_comment_author`. Form submissions clear comment content, reset Turnstile tokens, and append new comments immediately.
 - **Feature Inactivity**: If an article frontmatter defines `comment: false`, the comments section, comments GET request, and Turnstile script are completely omitted.
 - **Performance**: Article page loads add at most 1 × comments GET request. No polling is used.
+
+## Community Production publishing
+
+Community is enabled in Production through plain-text build-time `COMMUNITY_ENABLE=true`. The first real post is `community-start`; delivery is read-only and has no Community interaction writes.
+
+Private `alister-api` Operator CLI creates PostgreSQL drafts and explicitly publishes them. The manual Publisher is the only PostgreSQL → D1 write path; verify dry-run diffs, run with `--confirm-production`, then verify idempotency and the checkpoint. D1 batches are not one cross-batch transaction: a later failure leaves successful earlier batches intact, does not advance the checkpoint, and requires full reconciliation to converge.
+
+No images, media base, R2, or automatic sync schedule are enabled. See `docs/project-status.md` for the dated deployment and acceptance record.

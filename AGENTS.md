@@ -30,7 +30,8 @@ Markdown/MDX under `shirones/content/posts/` is the article source of truth. Fol
 
 Community is an independent short-post dynamic square (status updates, debug logs, notes, multi-image posts) completely decoupled from `/posts/` articles:
 - **Authoritative Source**: JD Cloud PostgreSQL (`alister-api`) is the single source of truth for management and writing.
-- **Edge Delivery**: Cloudflare D1 (`alister-public`) serves as the read-only replica.
+- **Edge Delivery**: Cloudflare D1 (`alister-public`) serves as the read-only replica. Private Operator CLI writes PostgreSQL drafts; explicit publish and manual Publisher reconciliation deliver eligible content to D1. The CLI never writes D1.
+- **Production Feature State**: Production enables the read-only UI with the plain-text build-time variable `COMMUNITY_ENABLE=true`; changing it requires a Pages Git Integration rebuild/redeploy. Keep local defaults disabled and verify environment-specific state. Do not enable images, Community writes, or automatic sync without a separate task.
 - **Feature Isolation**: Governed by `shirones/config/communityConfig.ts` with `enable: false` by default. When disabled, the navigation item is removed, `/community/*` redirects to `/404/`, and zero network requests are made.
 - **Hybrid Delivery Architecture**: Static shells `/community/` and `/community/post/` are served from CDN cache (`public/_routes.json`). Dynamic path `/community/[slug]` is rewritten at the edge by `functions/community/[slug].ts` using `env.ASSETS.fetch()` to `/community/post/` without full-site SSR. Svelte 5 client components (`CommunityFeedApp.svelte`, `CommunityDetailApp.svelte`) fetch D1 public APIs at runtime.
 
@@ -61,7 +62,6 @@ Current Pages Functions endpoints are:
   - `0001_public_interactions.sql`: `reactions`, `comments`
   - `0002_post_views.sql`: `post_views` (deduplicated by fixed 30-min bucket)
   - `0003_comment_rate_limit.sql`: rate limiting index `idx_comments_visitor_created` on `comments(visitor_id, created_at)`
-- **Local Development Only**:
   - `0004_community_public.sql`: `community_posts`, `community_post_images` (Public Read Replica)
 - **Migration Rules**:
   - Never edit a migration that has been applied to production. Add a new migration for schema changes.
