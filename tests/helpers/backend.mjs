@@ -2,21 +2,28 @@ import { DatabaseSync } from 'node:sqlite';
 import { readFileSync } from 'node:fs';
 import ts from 'typescript';
 
-const helper = ts.transpileModule(readFileSync('functions/_lib/http.ts', 'utf8'), {
+const httpHelper = ts.transpileModule(readFileSync('functions/_lib/http.ts', 'utf8'), {
   compilerOptions: { module: ts.ModuleKind.ESNext },
 }).outputText;
-const helperUrl = `data:text/javascript;base64,${Buffer.from(helper).toString('base64')}`;
+const httpHelperUrl = `data:text/javascript;base64,${Buffer.from(httpHelper).toString('base64')}`;
+
+const turnstileHelper = ts.transpileModule(readFileSync('functions/_lib/turnstile.ts', 'utf8'), {
+  compilerOptions: { module: ts.ModuleKind.ESNext },
+}).outputText;
+const turnstileHelperUrl = `data:text/javascript;base64,${Buffer.from(turnstileHelper).toString('base64')}`;
 
 export async function handler(path) {
   const source = ts.transpileModule(readFileSync(path, 'utf8'), {
     compilerOptions: { module: ts.ModuleKind.ESNext },
-  }).outputText.replace(/from ['"][^'"]*_lib\/http['"]/g, `from '${helperUrl}'`);
+  }).outputText
+    .replace(/from ['"][^'"]*_lib\/http['"]/g, `from '${httpHelperUrl}'`)
+    .replace(/from ['"][^'"]*_lib\/turnstile['"]/g, `from '${turnstileHelperUrl}'`);
   return (await import(`data:text/javascript;base64,${Buffer.from(source).toString('base64')}`)).onRequest;
 }
 
 export function database() {
   const sql = new DatabaseSync(':memory:');
-  for (const migration of ['0001_public_interactions.sql', '0002_post_views.sql']) {
+  for (const migration of ['0001_public_interactions.sql', '0002_post_views.sql', '0003_comment_rate_limit.sql']) {
     sql.exec(readFileSync(`migrations/${migration}`, 'utf8'));
   }
   return {
@@ -34,10 +41,28 @@ export function database() {
   };
 }
 
-export function call(fn, DB, method = 'GET', body, cookie, slug = 'hello-alister-blog') {
+const defaultFetch = async (url, options) => {
+  if (url === 'https://challenges.cloudflare.com/turnstile/v0/siteverify') {
+    const params = new URLSearchParams(options.body.toString());
+    const token = params.get('response');
+    if (token === 'valid-token' || token === '1x00000000000000000000AA' || token === 'test-token') {
+      return new Response(JSON.stringify({ success: true, action: 'comment_submit', hostname: 'alistereno.top' }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+    return new Response(JSON.stringify({ success: false, 'error-codes': ['invalid-input-response'] }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
+  return fetch(url, options);
+};
+
+export function call(fn, DB, method = 'GET', body, cookie, slug = 'hello-alister-blog', envOverrides = {}) {
   const headers = cookie ? { Cookie: cookie } : {};
   return fn({
-    env: { DB },
+    env: { DB, TURNSTILE_SECRET: '1x0000000000000000000000000000000AA', fetch: defaultFetch, ...envOverrides },
     params: { slug },
     request: new Request(`https://example.test/api/v1/test/${slug}`, {
       method,
