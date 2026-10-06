@@ -26,6 +26,7 @@ test("@smoke Swup navigation keeps the selected dark skin", async ({ page }) => 
 	await page.addInitScript(() => localStorage.setItem("theme", "dark"));
 	await page.goto("/");
 	await expect(page.locator("html")).toHaveClass(/dark/);
+	await page.waitForFunction(() => Boolean((window as Window & { swup?: unknown }).swup));
 	const documentStart = await page.evaluate(() => performance.timeOrigin);
 
 	await page.locator('a[href="/archive/"]:visible').first().click();

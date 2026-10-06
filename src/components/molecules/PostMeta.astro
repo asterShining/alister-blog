@@ -1,0 +1,35 @@
+---
+// Small article-only adapter; reuse Shirone's presentation atom unchanged.
+import PostMeta from "@components/atoms/blog/PostMeta.astro";
+import PostInteractions from "../blog/PostInteractions.astro";
+import { getCollection } from "astro:content";
+import I18nKey from "@i18n/i18nKey";
+import { i18n } from "@i18n/translation";
+import { formatDateToYYYYMMDD } from "@utils/date-utils";
+import { getCategoryUrl, getTagUrl, getPostUrl } from "@utils/url-utils";
+interface Props {
+  class?: string;
+  published: Date;
+  updated?: Date;
+  tags: string[];
+  category: string | null;
+  hideUpdateDate?: boolean;
+}
+const { class: className, published, updated, tags, category, hideUpdateDate = false } = Astro.props;
+const posts = await getCollection("posts");
+const current = posts.find(post => new URL(getPostUrl(post), Astro.url).pathname === Astro.url.pathname);
+// Use the stable content ID, including for alias/permalink URLs. API slugs are deliberately flat.
+const slug = current?.id;
+const supportedSlug = slug && /^[a-zA-Z0-9_-]{1,200}$/.test(slug) ? slug : undefined;
+---
+<PostMeta
+  class={className}
+  published={formatDateToYYYYMMDD(published)}
+  updated={updated ? formatDateToYYYYMMDD(updated) : undefined}
+  category={category ? { name: category, href: getCategoryUrl(category) } : null}
+  tags={tags.map(tag => ({ name: tag.trim(), href: getTagUrl(tag) }))}
+  hideUpdate={hideUpdateDate}
+  uncategorizedLabel={i18n(I18nKey.uncategorized)}
+  noTagsLabel={i18n(I18nKey.noTags)}
+/>
+{supportedSlug && <PostInteractions slug={supportedSlug} />}
