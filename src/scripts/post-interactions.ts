@@ -52,7 +52,6 @@ class PostInteractions extends HTMLElement {
 
   private render() {
     this.text("[data-likes]", String(this.likes));
-    this.text("[data-heart]", this.liked ? "♥" : "♡");
     this.button.setAttribute("aria-pressed", String(this.liked));
     this.button.setAttribute("aria-label", this.liked ? "取消点赞" : "点赞文章");
   }
