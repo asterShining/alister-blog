@@ -301,6 +301,18 @@ html.swup-enabled #content-wrapper.onload-animation {
 	animation-delay: 0ms;
 }
 
+/* Both skins' artwork is declared on always-rendered pseudo-elements, so the
+ * browser downloads the inactive skin's wallpaper and Hero too: ~350 KB of
+ * never-visible bytes competing with the font and scripts during the critical
+ * window. The inactive layer is attached once the page is idle; by then the
+ * images are in the HTTP cache, so switching theme still cross-fades. */
+html:not(.theme-art-ready):not(.dark) body::after,
+html:not(.theme-art-ready).dark body::before,
+html:not(.theme-art-ready):not(.dark) .banner-stage__media::after,
+html:not(.theme-art-ready).dark .banner-stage__media::before {
+	background-image: none;
+}
+
 /* White Hero and Navbar text needs a dependable floor over bright clouds. */
 html:not(.dark) .banner-stage__scrim {
 	background: linear-gradient(
