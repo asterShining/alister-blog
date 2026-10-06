@@ -1,0 +1,34 @@
+---
+import MetaIcon from "@components/atoms/display/MetaIcon.astro";
+
+interface Props {
+  title?: string;
+  description?: string;
+}
+
+const {
+  title = "还没有动态呢",
+  description = "Alister 还没发布任何社区动态，过段时间再来看看吧。",
+} = Astro.props;
+---
+
+<div class="community-empty-state flex flex-col items-center justify-center p-8 sm:p-12 text-center rounded-[var(--shape-corner-l)] border border-dashed border-[var(--outline-variant)] bg-[var(--card-bg)] my-4">
+  <div class="mb-4">
+    <MetaIcon
+      icon="material-symbols:forum-outline-rounded"
+      style="width: 3.5rem; height: 3.5rem; border-radius: var(--shape-corner-m);"
+    />
+  </div>
+  <h2 class="text-xl sm:text-2xl font-bold text-[var(--on-surface)] mb-2">
+    {title}
+  </h2>
+  <p class="text-[var(--on-surface-variant)] text-sm sm:text-base max-w-md mb-6 leading-relaxed">
+    {description}
+  </p>
+  <a
+    href="/"
+    class="community-empty-state__btn inline-flex items-center gap-2 px-5 py-2.5 rounded-[var(--shape-corner-s)] bg-[var(--btn-regular-bg)] text-[var(--btn-content)] font-medium text-sm transition hover:brightness-105 active:scale-[0.98]"
+  >
+    <span>返回首页</span>
+  </a>
+</div>

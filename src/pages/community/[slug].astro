@@ -1,0 +1,38 @@
+---
+import MainGridLayout from "@layouts/MainGridLayout.astro";
+import { communityConfig } from "@config/communityConfig.ts";
+import { getCommunityAdapter } from "../../lib/community";
+import CommunityPostView from "../../components/community/CommunityPostView.astro";
+import type { CommunityPost } from "../../lib/community/types.ts";
+
+export async function getStaticPaths() {
+  if (!communityConfig.enable) {
+    return [];
+  }
+  const adapter = getCommunityAdapter();
+  const { posts } = await adapter.listPosts();
+  return posts.map((post) => ({
+    params: { slug: post.slug },
+    props: { post },
+  }));
+}
+
+interface Props {
+  post: CommunityPost;
+}
+
+const { post } = Astro.props;
+
+if (!communityConfig.enable || !post) {
+  return Astro.redirect("/404/");
+}
+
+const pageTitle = post.title || `动态 - ${post.createdAt.slice(0, 10)}`;
+const pageDescription = post.content.slice(0, 120);
+---
+
+<MainGridLayout title={pageTitle} description={pageDescription}>
+  <div class="community-detail-page max-w-3xl mx-auto py-2">
+    <CommunityPostView post={post} />
+  </div>
+</MainGridLayout>

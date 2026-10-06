@@ -17,7 +17,8 @@
     "release:major": "node scripts/release.mjs major",
     "test:release": "node --test tests/release.test.mjs",
     "typecheck:functions": "tsc -p functions/tsconfig.json",
-    "test:backend": "node --test tests/backend.test.mjs"
+    "test:backend": "node --test tests/backend.test.mjs",
+    "test:community": "node --test tests/community.test.mjs"
   },
   "dependencies": {
     "astro": "^7.3.5",

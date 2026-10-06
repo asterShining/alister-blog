@@ -26,6 +26,16 @@
   - Optional disabling via `comment: false` post frontmatter.
 - Empty Series collection warning compensation while preserving schema validation.
 - Friend page populated with two configured links in `shirones/config/data/friends.ts`.
+- Community Frontend Foundation (Phase 1):
+  - Independent content model for short posts, status updates, and multi-image posts at `/community/` and `/community/[slug]/`, separate from the `/posts/` markdown collection.
+  - Feature flag `shirones/config/communityConfig.ts` with `enable: false` by default.
+  - Feature isolation: when disabled, automatically pruned from the navigation bar, route accesses redirect to `/404/`, and zero community network requests are fired.
+  - Safe Markdown renderer (`src/lib/community/markdown.ts`) with HTML entity escaping and URL protocol sanitization.
+  - Responsive image grid (`CommunityImageGrid.astro`) supporting 0, 1, 2, 3, 4, and >4 image layouts on mobile (390px) and desktop (1440px).
+  - Theme integration aligned with Summer Blue and Starry Night tokens, friendly empty state (`CommunityEmptyState.astro`), feed card (`CommunityPostCard.astro`), and detail view (`CommunityPostView.astro`).
+  - Typed DTO contracts (`src/lib/community/types.ts`) and adapter layer (`src/lib/community/adapter.ts`) preventing mock fixture leaks into production.
+  - API integration specification documented in `docs/community-contract.md`.
+  - Comprehensive unit tests (`tests/community.test.mjs`) and Playwright E2E coverage (`tests/e2e/community.spec.mjs`).
 
 ## Public Backend
 

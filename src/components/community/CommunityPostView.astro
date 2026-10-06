@@ -1,0 +1,115 @@
+---
+import MetaIcon from "@components/atoms/display/MetaIcon.astro";
+import type { CommunityPost } from "../../lib/community/types.ts";
+import { renderCommunityMarkdown } from "../../lib/community/markdown.ts";
+import CommunityImageGrid from "./CommunityImageGrid.astro";
+
+interface Props {
+  post: CommunityPost;
+  class?: string;
+}
+
+const { post, class: className = "" } = Astro.props;
+
+const renderedContent = renderCommunityMarkdown(post.content);
+const formattedDate = post.createdAt ? post.createdAt.slice(0, 10) : "";
+const defaultAvatar = "/images/profile/avatar.webp";
+
+const backIconStyle = "width:1.1rem;height:1.1rem;background:transparent;color:inherit;";
+const infoIconStyle = "width:1.25rem;height:1.25rem;background:transparent;color:var(--primary);";
+---
+
+<div class:list={["community-post-view", className]}>
+  {/* Back link */}
+  <div class="mb-4">
+    <a
+      href="/community/"
+      class="community-back-link inline-flex items-center gap-1.5 px-3 py-1.5 rounded-[var(--shape-corner-s)] bg-[var(--btn-regular-bg)] text-[var(--btn-content)] text-sm font-medium transition hover:brightness-105 active:scale-[0.98]"
+    >
+      <MetaIcon icon="material-symbols:arrow-back-rounded" style={backIconStyle} />
+      <span>返回社区动态</span>
+    </a>
+  </div>
+
+  {/* Main Article Container */}
+  <article class="community-detail-card rounded-[var(--shape-corner-l)] border border-[var(--outline-variant)] bg-[var(--card-bg)] p-5 sm:p-8">
+    {/* Author Header */}
+    <header class="community-detail-header flex items-center gap-3.5 pb-4 mb-4 border-b border-[var(--outline-variant)]">
+      <img
+        src={post.author.avatar || defaultAvatar}
+        alt={post.author.name}
+        class="w-12 h-12 rounded-full object-cover border border-[var(--outline-variant)] flex-shrink-0"
+        loading="eager"
+        decoding="async"
+      />
+      <div>
+        <div class="font-bold text-base sm:text-lg text-[var(--on-surface)] leading-tight">
+          {post.author.name}
+        </div>
+        <div class="flex items-center gap-2 text-xs sm:text-sm text-[var(--on-surface-variant)] mt-1">
+          <time datetime={post.createdAt}>发布于 {formattedDate}</time>
+          {post.updatedAt && (
+            <span>· 编辑于 {post.updatedAt.slice(0, 10)}</span>
+          )}
+        </div>
+      </div>
+    </header>
+
+    {/* Title if present */}
+    {post.title && (
+      <h1 class="community-detail-title text-xl sm:text-2xl font-bold text-[var(--on-surface)] mb-4 leading-snug">
+        {post.title}
+      </h1>
+    )}
+
+    {/* Content */}
+    <div
+      class="community-detail-body text-sm sm:text-base leading-relaxed text-[var(--on-surface)] my-4"
+      set:html={renderedContent}
+    />
+
+    {/* Images */}
+    {post.images && post.images.length > 0 && (
+      <div class="community-detail-images my-6">
+        <CommunityImageGrid images={post.images} />
+      </div>
+    )}
+
+    {/* Tags */}
+    {post.tags && post.tags.length > 0 && (
+      <div class="community-detail-tags flex flex-wrap gap-2 pt-4 mt-4 border-t border-[var(--outline-variant)]">
+        {post.tags.map((tag) => (
+          <span class="community-tag-chip inline-flex items-center text-xs sm:text-sm px-3 py-1 rounded-[var(--shape-corner-s)] bg-[var(--btn-regular-bg)] text-[var(--btn-content)] font-medium">
+            #{tag}
+          </span>
+        ))}
+      </div>
+    )}
+
+    {/* Interaction Notice */}
+    <aside class="community-phase-notice mt-6 p-4 rounded-[var(--shape-corner-m)] bg-[var(--surface-container)] border border-[var(--outline-variant)] flex items-start gap-3 text-xs sm:text-sm text-[var(--on-surface-variant)]">
+      <MetaIcon icon="material-symbols:info-outline-rounded" style={infoIconStyle} class="mt-0.5" />
+      <div>
+        <p class="font-medium text-[var(--on-surface)] mb-0.5">关于动态互动</p>
+        <p>当前阶段仅提供动态浏览，互动功能（点赞与评论）将在后续阶段开放。</p>
+      </div>
+    </aside>
+  </article>
+
+  {/* Bottom navigation */}
+  <div class="mt-6 flex justify-between items-center px-1">
+    <a
+      href="/community/"
+      class="text-sm font-medium text-[var(--primary)] hover:underline inline-flex items-center gap-1"
+    >
+      <MetaIcon icon="material-symbols:arrow-back-rounded" style={backIconStyle} />
+      <span>返回社区广场</span>
+    </a>
+    <a
+      href="/"
+      class="text-sm font-medium text-[var(--on-surface-variant)] hover:text-[var(--on-surface)]"
+    >
+      返回博客首页
+    </a>
+  </div>
+</div>

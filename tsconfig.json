@@ -16,6 +16,9 @@
       "@/*": [
         "./node_modules/shirones/src/*"
       ],
+      "@config/*": [
+        "./shirones/config/*"
+      ],
       "@components/*": [
         "./node_modules/shirones/src/components/*"
       ],
