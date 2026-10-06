@@ -11,7 +11,7 @@ test.describe("Trajectory + Article UX (when community is enabled)", () => {
     }
   });
 
-  test("homepage displays filter [全部 | 文章 | 轨迹] with default '全部' showing mixed cards", async ({
+  test("homepage displays filter [全部 | 文章 | 轨迹] with default '全部' showing mixed cards and interactive category tier", async ({
     page,
   }) => {
     await page.route("**/api/v1/community/posts*", async (route) => {
@@ -49,7 +49,10 @@ test.describe("Trajectory + Article UX (when community is enabled)", () => {
 
     await page.goto("/");
 
-    // Verify filter buttons
+    // Verify filter bar container and buttons
+    const filterCard = page.locator("#feed-filter-card");
+    await expect(filterCard).toBeVisible();
+
     const btnAll = page.locator("#filter-btn-all");
     const btnArticle = page.locator("#filter-btn-article");
     const btnTrajectory = page.locator("#filter-btn-trajectory");
@@ -57,7 +60,18 @@ test.describe("Trajectory + Article UX (when community is enabled)", () => {
     await expect(btnAll).toBeVisible();
     await expect(btnArticle).toBeVisible();
     await expect(btnTrajectory).toBeVisible();
+
+    // Default '全部' active
     await expect(btnAll).toHaveClass(/m3-chip--selected/);
+    await expect(btnAll).toHaveAttribute("aria-selected", "true");
+    await expect(btnArticle).toHaveAttribute("aria-selected", "false");
+    if (await btnTrajectory.count() > 0) {
+      await expect(btnTrajectory).toHaveAttribute("aria-selected", "false");
+    }
+
+    // Verify Tier 2 Article categories exist
+    const categoryChips = page.locator(".category-filter-btn");
+    await expect(categoryChips.first()).toBeVisible();
 
     // Verify both article and trajectory cards exist in feed
     const articleCards = page.locator('#post-list [data-card-type="article"]');
@@ -85,22 +99,40 @@ test.describe("Trajectory + Article UX (when community is enabled)", () => {
     // Test filtering by "文章"
     await btnArticle.click();
     await expect(btnArticle).toHaveClass(/m3-chip--selected/);
+    await expect(btnArticle).toHaveAttribute("aria-selected", "true");
     await expect(btnAll).not.toHaveClass(/m3-chip--selected/);
+    await expect(btnAll).toHaveAttribute("aria-selected", "false");
     await expect(articleCards.first()).toBeVisible();
     await expect(trajectoryCards.first()).not.toBeVisible();
+
+    // Test category filter chip interaction
+    const dailyCatBtn = page.locator('.category-filter-btn[data-category="日常"]');
+    if (await dailyCatBtn.count() > 0) {
+      await dailyCatBtn.click();
+      await expect(dailyCatBtn).toHaveClass(/m3-chip--selected/);
+      await expect(articleCards.first()).toBeVisible();
+    }
 
     // Test filtering by "轨迹"
     await btnTrajectory.click();
     await expect(btnTrajectory).toHaveClass(/m3-chip--selected/);
+    await expect(btnTrajectory).toHaveAttribute("aria-selected", "true");
     await expect(btnArticle).not.toHaveClass(/m3-chip--selected/);
+    await expect(btnArticle).toHaveAttribute("aria-selected", "false");
     await expect(trajectoryCards.first()).toBeVisible();
     await expect(articleCards.first()).not.toBeVisible();
+
+    // Category chips should be dimmed when trajectory is active
+    const categoryGroup = page.locator("#category-bar-categories");
+    await expect(categoryGroup).toHaveCSS("pointer-events", "none");
 
     // Test returning to "全部"
     await btnAll.click();
     await expect(btnAll).toHaveClass(/m3-chip--selected/);
+    await expect(btnAll).toHaveAttribute("aria-selected", "true");
     await expect(articleCards.first()).toBeVisible();
     await expect(trajectoryCards.first()).toBeVisible();
+    await expect(categoryGroup).toHaveCSS("pointer-events", "auto");
   });
 
   test("API error degrades gracefully without breaking article feed", async ({ page }) => {
@@ -150,7 +182,7 @@ test.describe("Trajectory + Article UX (when community is enabled)", () => {
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto("/");
 
-    // Verify filter buttons and cards fit within 390px
+    // Verify filter buttons fit within 390px
     const filterCard = page.locator("#feed-filter-card");
     await expect(filterCard).toBeVisible();
 
@@ -174,12 +206,25 @@ test.describe("Articles Page (/posts/) Visual Feed and Search View", () => {
   }) => {
     await page.goto("/posts/");
 
-    // Check tab buttons
+    // Check header and segmented control
+    const header = page.locator("#posts-page-header");
+    await expect(header).toBeVisible();
+
+    const segmentedControl = page.locator("#posts-view-switch");
+    await expect(segmentedControl).toBeVisible();
+    await expect(segmentedControl).toHaveAttribute("role", "tablist");
+
     const tabFeedBtn = page.locator("#tab-btn-feed");
     const tabSearchBtn = page.locator("#tab-btn-search");
     await expect(tabFeedBtn).toBeVisible();
     await expect(tabSearchBtn).toBeVisible();
+
+    // Default '文章' tab active
+    await expect(tabFeedBtn).toHaveClass(/posts-segment-btn--active/);
     await expect(tabFeedBtn).toHaveClass(/m3-chip--selected/);
+    await expect(tabFeedBtn).toHaveAttribute("aria-selected", "true");
+    await expect(tabSearchBtn).not.toHaveClass(/posts-segment-btn--active/);
+    await expect(tabSearchBtn).toHaveAttribute("aria-selected", "false");
 
     // Verify visual article cards are shown by default
     const feedPanel = page.locator("#posts-feed-pane");
@@ -192,15 +237,17 @@ test.describe("Articles Page (/posts/) Visual Feed and Search View", () => {
 
     // Switch to search/archive tab
     await tabSearchBtn.click();
-    await expect(tabSearchBtn).toHaveClass(/m3-chip--selected/);
-    await expect(tabFeedBtn).not.toHaveClass(/m3-chip--selected/);
+    await expect(tabSearchBtn).toHaveClass(/posts-segment-btn--active/);
+    await expect(tabSearchBtn).toHaveAttribute("aria-selected", "true");
+    await expect(tabFeedBtn).not.toHaveClass(/posts-segment-btn--active/);
+    await expect(tabFeedBtn).toHaveAttribute("aria-selected", "false");
     await expect(feedPanel).not.toBeVisible();
     await expect(searchPanel).toBeVisible();
 
     // Test ?tab=search directly selects search tab
     await page.goto("/posts/?tab=search");
-    await expect(page.locator("#tab-btn-search")).toHaveClass(/m3-chip--selected/);
+    await expect(page.locator("#tab-btn-search")).toHaveClass(/posts-segment-btn--active/);
+    await expect(page.locator("#tab-btn-search")).toHaveAttribute("aria-selected", "true");
     await expect(page.locator("#posts-search-pane")).toBeVisible();
   });
 });
-

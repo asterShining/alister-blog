@@ -7,7 +7,6 @@
  * - 轨迹数据通过客户端动态拉取，API 异常时容错降级，不阻断文章流。
  */
 import type { CollectionEntry } from "astro:content";
-import Card from "@components/atoms/display/Card.svelte";
 import { getPostUrl } from "@utils/url-utils";
 import { POST_CARD_MIN_WIDTH, postListConfig } from "@/config/postListConfig";
 import PostCard from "@components/organisms/PostCard.astro";
@@ -25,37 +24,6 @@ const isCommunityEnabled = communityConfig.enable;
 ---
 
 <div id="post-page-config" data-community-enabled={isCommunityEnabled ? "true" : "false"} class="hidden"></div>
-
-{isCommunityEnabled && (
-  <Card color="var(--card-bg)" radius="l" class="feed-filter-card onload-animation mb-4 p-2" id="feed-filter-card">
-  <div class="feed-filter-inner flex gap-2 items-center">
-    <button
-      type="button"
-      class="m3-chip m3-chip--tonal m3-chip--selected feed-filter-btn"
-      data-feed-filter="all"
-      id="filter-btn-all"
-    >
-      <span>全部</span>
-    </button>
-    <button
-      type="button"
-      class="m3-chip m3-chip--tonal feed-filter-btn"
-      data-feed-filter="article"
-      id="filter-btn-article"
-    >
-      <span>文章</span>
-    </button>
-    <button
-      type="button"
-      class="m3-chip m3-chip--tonal feed-filter-btn"
-      data-feed-filter="trajectory"
-      id="filter-btn-trajectory"
-    >
-      <span>轨迹</span>
-    </button>
-  </div>
-</Card>
-)}
 
 <!-- 轨迹状态提示（空状态或加载异常时针对轨迹筛选生效） -->
 <div id="trajectory-status-notice" class="hidden mb-4"></div>
@@ -174,11 +142,13 @@ function initHomeFeed() {
 
   const configEl = document.getElementById("post-page-config");
   const isCommunityEnabled = configEl?.dataset.communityEnabled === "true";
-  if (!isCommunityEnabled) return;
 
   const filterButtons = document.querySelectorAll<HTMLButtonElement>("[data-feed-filter]");
+  const categoryButtons = document.querySelectorAll<HTMLButtonElement>(".category-filter-btn");
+  const categoryGroup = document.getElementById("category-bar-categories");
   const noticeEl = document.getElementById("trajectory-status-notice");
   let activeFilter: "all" | "article" | "trajectory" = "all";
+  let activeCategory: string | null = null;
   let trajectoryApiFailed = false;
 
   function updateCardVisibility() {
@@ -188,17 +158,38 @@ function initHomeFeed() {
 
     cards.forEach((card) => {
       const type = card.getAttribute("data-card-type");
+      const cardCategory = card.getAttribute("data-card-category");
       let visible = true;
+
       if (activeFilter === "article") {
         visible = type === "article";
+        if (visible && activeCategory) {
+          visible = cardCategory === activeCategory;
+        }
       } else if (activeFilter === "trajectory") {
         visible = type === "trajectory";
+      } else if (activeFilter === "all") {
+        if (type === "article" && activeCategory) {
+          visible = cardCategory === activeCategory;
+        }
       }
+
       card.style.display = visible ? "" : "none";
       if (type === "trajectory" && visible) {
         visibleTrajectoryCount++;
       }
     });
+
+    // 联动控制第二层分类栏的可用状态
+    if (categoryGroup) {
+      if (activeFilter === "trajectory") {
+        categoryGroup.style.opacity = "0.35";
+        categoryGroup.style.pointerEvents = "none";
+      } else {
+        categoryGroup.style.opacity = "";
+        categoryGroup.style.pointerEvents = "";
+      }
+    }
 
     if (noticeEl) {
       if (activeFilter === "trajectory" && visibleTrajectoryCount === 0) {
@@ -221,9 +212,14 @@ function initHomeFeed() {
 
   function setFilter(filter: "all" | "article" | "trajectory") {
     activeFilter = filter;
+    if (filter === "trajectory") {
+      activeCategory = null;
+      categoryButtons.forEach((b) => b.classList.remove("m3-chip--selected"));
+    }
     filterButtons.forEach((btn) => {
       const isTarget = btn.getAttribute("data-feed-filter") === filter;
       btn.classList.toggle("m3-chip--selected", isTarget);
+      btn.setAttribute("aria-selected", isTarget ? "true" : "false");
     });
     updateCardVisibility();
   }
@@ -232,6 +228,24 @@ function initHomeFeed() {
     btn.onclick = () => {
       const filter = btn.getAttribute("data-feed-filter") as "all" | "article" | "trajectory";
       if (filter) setFilter(filter);
+    };
+  });
+
+  categoryButtons.forEach((btn) => {
+    btn.onclick = () => {
+      const cat = btn.getAttribute("data-category");
+      if (activeCategory === cat) {
+        activeCategory = null;
+        btn.classList.remove("m3-chip--selected");
+      } else {
+        activeCategory = cat;
+        categoryButtons.forEach((b) => b.classList.toggle("m3-chip--selected", b === btn));
+        if (activeFilter === "trajectory") {
+          setFilter("article");
+          return;
+        }
+      }
+      updateCardVisibility();
     };
   });
 
@@ -369,7 +383,9 @@ function initHomeFeed() {
     }
   }
 
-  loadTrajectoryFeed();
+  if (isCommunityEnabled) {
+    loadTrajectoryFeed();
+  }
 }
 
 initHomeFeed();

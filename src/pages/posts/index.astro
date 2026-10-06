@@ -1,8 +1,9 @@
 ---
 /**
  * 文章主页：
+ * - 顶部专属 Header 与 Segmented Control（文章 | 检索 视图切换）；
  * - 默认展示文章视觉 Card 完整流（Visual Article Card Feed）；
- * - “文章 | 检索”切换：保留原年份、分类、标签紧凑列表作为“检索”视图；
+ * - 检索视图：保留原年份、分类、标签检索面板（ArchivePanel）；
  * - 两者共享底层 getSortedPosts / getSortedPostsList 单一数据源。
  */
 import Card from "@components/atoms/display/Card.svelte";
@@ -23,30 +24,63 @@ const { mode, cover, cardWidth } = postListConfig.layout;
 ---
 
 <MainGridLayout title="文章" description={archiveSummary} page="archive">
-  <!-- 文章 | 检索 视图切换 -->
-  <Card color="var(--card-bg)" radius="l" class="posts-view-switch onload-animation mb-4 p-2" id="posts-view-switch">
-    <div class="posts-view-inner flex gap-2 items-center">
-      <button
-        type="button"
-        class="m3-chip m3-chip--tonal m3-chip--selected posts-tab-btn"
-        data-posts-tab="feed"
-        id="tab-btn-feed"
-      >
-        <span>文章</span>
-      </button>
-      <button
-        type="button"
-        class="m3-chip m3-chip--tonal posts-tab-btn"
-        data-posts-tab="search"
-        id="tab-btn-search"
-      >
-        <span>检索</span>
-      </button>
+  <!-- 文章专栏头部：标题 + 明确的 Segmented Control 切换器 -->
+  <Card color="var(--card-bg)" radius="l" class="posts-page-header onload-animation mb-6 p-4 sm:p-5" id="posts-page-header">
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div class="posts-page-info">
+        <h1 class="text-xl sm:text-2xl font-bold text-[var(--on-surface)] flex items-center gap-2.5 tracking-tight">
+          <svg class="w-6 h-6 text-[var(--primary)] shrink-0" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/>
+          </svg>
+          <span>文章</span>
+          <span class="text-xs sm:text-sm font-normal px-2.5 py-0.5 rounded-full bg-[var(--surface-container-high)] text-[var(--on-surface-variant)] border border-[var(--outline-variant)]">
+            {archiveSummary}
+          </span>
+        </h1>
+        <p class="text-xs sm:text-sm text-[var(--on-surface-variant)] mt-1.5">
+          深入思考与系统记录，支持视觉卡片流与全维度检索。
+        </p>
+      </div>
+
+      <!-- Segmented Control / Tabs 切换器 -->
+      <div class="posts-segmented-control shrink-0" role="tablist" aria-label="文章视图模式" id="posts-view-switch">
+        <button
+          type="button"
+          class="posts-segment-btn posts-segment-btn--active m3-chip--selected"
+          data-posts-tab="feed"
+          id="tab-btn-feed"
+          role="tab"
+          aria-selected="true"
+          aria-controls="posts-feed-pane"
+        >
+          <svg class="w-4 h-4 mr-1.5 shrink-0" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <path d="M4 5h16v2H4zm0 6h16v2H4zm0 6h16v2H4z"/>
+          </svg>
+          <span>文章</span>
+        </button>
+        <button
+          type="button"
+          class="posts-segment-btn"
+          data-posts-tab="search"
+          id="tab-btn-search"
+          role="tab"
+          aria-selected="false"
+          aria-controls="posts-search-pane"
+        >
+          <svg class="w-4 h-4 mr-1.5 shrink-0" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 14z"/>
+          </svg>
+          <span>检索</span>
+        </button>
+      </div>
     </div>
   </Card>
 
+  <!-- 视图与内容明确分隔线 -->
+  <div class="posts-view-divider border-b border-[var(--outline-variant)] opacity-40 mb-6" aria-hidden="true"></div>
+
   <!-- 视图 1：文章视觉流（默认） -->
-  <div id="posts-feed-pane" class="posts-tab-pane">
+  <div id="posts-feed-pane" class="posts-tab-pane" role="tabpanel" aria-labelledby="tab-btn-feed">
     <div class:list={["m3e-post-list-shell", `m3e-post-list-shell--${cardWidth}`]}>
       <div
         id="post-list"
@@ -80,13 +114,70 @@ const { mode, cover, cardWidth } = postListConfig.layout;
   </div>
 
   <!-- 视图 2：检索（年份 / 分类 / 标签） -->
-  <div id="posts-search-pane" class="posts-tab-pane hidden">
+  <div id="posts-search-pane" class="posts-tab-pane hidden" role="tabpanel" aria-labelledby="tab-btn-search">
     <ArchivePanel sortedPosts={sortedPostsList} client:load />
   </div>
 </MainGridLayout>
 
 <style lang="stylus">
 @import "../../styles/breakpoints.styl"
+
+.posts-segmented-control
+	display: inline-flex
+	align-items: center
+	padding: 0.25rem
+	border-radius: var(--shape-corner-full, 9999px)
+	background: var(--surface-container-high, rgba(128, 128, 128, 0.12))
+	border: 1px solid var(--outline-variant, rgba(128, 128, 128, 0.2))
+	box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.08)
+	user-select: none
+
+.posts-segment-btn
+	display: inline-flex
+	align-items: center
+	justify-content: center
+	padding: 0.45rem 1.15rem
+	border-radius: var(--shape-corner-full, 9999px)
+	border: none
+	background: transparent
+	font-size: 0.875rem
+	font-weight: 500
+	color: var(--on-surface-variant)
+	cursor: pointer
+	transition: all 0.2s cubic-bezier(0.2, 0, 0, 1)
+
+	svg
+		width: 1.1rem
+		height: 1.1rem
+		opacity: 0.8
+		transition: opacity 0.2s ease, transform 0.2s ease
+
+	&:hover:not(.posts-segment-btn--active)
+		color: var(--on-surface)
+		background: var(--surface-container-highest, rgba(128, 128, 128, 0.08))
+		svg
+			opacity: 1
+
+	&:focus-visible
+		outline: 2px solid var(--primary)
+		outline-offset: 1px
+
+	&--active
+		background: var(--primary)
+		color: var(--on-primary)
+		font-weight: 600
+		box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2), 0 1px 2px rgba(0, 0, 0, 0.1)
+
+		svg
+			opacity: 1
+			color: var(--on-primary)
+			fill: var(--on-primary)
+
+@media (max-width: 639px)
+	.posts-segmented-control
+		width: 100%
+	.posts-segment-btn
+		flex: 1
 
 .m3e-post-list-shell
 	container: post-list-layout / inline-size
@@ -130,13 +221,17 @@ activate-post-grid()
 
     function setTab(tab) {
       if (tab === "search") {
-        feedBtn.classList.remove("m3-chip--selected");
-        searchBtn.classList.add("m3-chip--selected");
+        feedBtn.classList.remove("posts-segment-btn--active", "m3-chip--selected");
+        feedBtn.setAttribute("aria-selected", "false");
+        searchBtn.classList.add("posts-segment-btn--active", "m3-chip--selected");
+        searchBtn.setAttribute("aria-selected", "true");
         feedPane.classList.add("hidden");
         searchPane.classList.remove("hidden");
       } else {
-        searchBtn.classList.remove("m3-chip--selected");
-        feedBtn.classList.add("m3-chip--selected");
+        searchBtn.classList.remove("posts-segment-btn--active", "m3-chip--selected");
+        searchBtn.setAttribute("aria-selected", "false");
+        feedBtn.classList.add("posts-segment-btn--active", "m3-chip--selected");
+        feedBtn.setAttribute("aria-selected", "true");
         searchPane.classList.add("hidden");
         feedPane.classList.remove("hidden");
       }
