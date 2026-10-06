@@ -2,6 +2,17 @@
 /**
  * 站点统计侧栏 widget（规格表风格）。
  * 覆盖原 SiteStats，将“动态”修改为“轨迹”，并在客户端动态获取真实轨迹总数。
+ *
+ * 两个脚本是刻意的分工（详见 docs/performance.md）：
+ *
+ * 1. 「最近更新」相对时间保持 inline，解析期即执行，避免先闪一下原始日期；
+ *    它带 `data-swup-ignore-script`，因为 Swup 的 ScriptsPlugin 每次导航都会
+ *    重新执行文档内所有 inline 脚本，而这个标签重跑没有任何意义。
+ *
+ * 2. 轨迹总数走打包后的 module。ScriptsPlugin 重新插入
+ *    `<script type="module">` 不会让它二次求值（ES module 每个文档只执行一次），
+ *    因此天然免疫 `content:replace` handler 累积。它**必须**保持为“被处理的”
+ *    脚本：在这上面加任何额外属性都会让 Astro 原样输出，把裸 `import` 发给浏览器。
  */
 import MetaIcon from "@components/atoms/display/MetaIcon.astro";
 import I18nKey from "@i18n/i18nKey";
@@ -83,7 +94,14 @@ const rows = [
 ---
 
 <WidgetLayout name={i18n(I18nKey.stats)} id="site-stats" class={className} style={style}>
-	<ul class="m3-site-stats">
+	<ul
+		class="m3-site-stats"
+		data-stats-community-enabled={communityConfig.enable ? "true" : "false"}
+		data-stats-last-activity={stats.lastActivity ?? ""}
+		data-stats-today={todayText}
+		data-stats-yesterday={yesterdayText}
+		data-stats-days-ago={daysAgoText}
+	>
 		{rows.map((row) => (
 			<li class="m3-site-stats__row">
 				<MetaIcon icon={row.icon} />
@@ -135,45 +153,88 @@ const rows = [
 		white-space: nowrap
 </style>
 
-<script is:inline define:vars={{ communityEnabled: communityConfig.enable, lastActivityISO: stats.lastActivity, todayText, yesterdayText, daysAgoText }}>
+<script is:inline data-swup-ignore-script>
 	(() => {
-		const el = document.querySelector("[data-last-update]");
-		if (!el || !lastActivityISO) return;
 		const DAY_MS = 86_400_000;
-		const dayStart = (d) =>
-			new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
-		const diffDays = Math.round(
-			(dayStart(new Date()) - dayStart(new Date(lastActivityISO))) / DAY_MS,
-		);
-		if (diffDays <= 0) el.textContent = todayText;
-		else if (diffDays === 1) el.textContent = yesterdayText;
-		else el.textContent = daysAgoText.replace("{days}", String(diffDays));
+		const dayStart = (d) => new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
+		document.querySelectorAll(".m3-site-stats").forEach((root) => {
+			const el = root.querySelector("[data-last-update]");
+			const iso = root.dataset.statsLastActivity;
+			if (!el || !iso) return;
+			const diffDays = Math.round((dayStart(new Date()) - dayStart(new Date(iso))) / DAY_MS);
+			if (diffDays <= 0) el.textContent = root.dataset.statsToday;
+			else if (diffDays === 1) el.textContent = root.dataset.statsYesterday;
+			else el.textContent = (root.dataset.statsDaysAgo || "{days}").replace("{days}", String(diffDays));
+		});
 	})();
+</script>
 
-	(() => {
-		if (!communityEnabled) return;
-		async function updateTrajectoryCount() {
-			const el = document.querySelector("[data-stat-trajectory]");
-			if (!el) return;
-			try {
-				const res = await fetch("/api/v1/community/posts?limit=1");
-				if (res.ok) {
-					const data = await res.json();
-					if (data && data.code === 0 && typeof data.data?.total === "number") {
-						el.textContent = data.data.total.toLocaleString("en-US");
-					}
-				}
-			} catch {
+<script>
+	/*
+	 * Trajectory total for the 统计 widget.
+	 *
+	 * This used to be an inline script that fetched `/api/v1/community/posts?limit=1`
+	 * and registered an `async` handler on the `content:replace` hook. Two things
+	 * went wrong with that, both measured against Production:
+	 *
+	 *  1. Swup's ScriptsPlugin re-executes inline scripts on every navigation, so
+	 *     each visit registered one more `content:replace` handler; navigating
+	 *     awaited one more API request every time (a fresh session went from
+	 *     ~1.7 s to ~8.3 s of blocked settle time within eight navigations).
+	 *  2. Swup awaits any hook handler that returns a thenable, so the request
+	 *     itself sat on the navigation critical path even on the first visit.
+	 *
+	 * Now it is a bundled module (modules are evaluated once per document, so
+	 * re-inserting the tag cannot re-register anything), it reads through the
+	 * shared short-TTL cache, and the hook handler returns `undefined` on
+	 * purpose so the fetch is never awaited by the router.
+	 */
+	import { getCommunityAdapter } from "../../lib/community/adapter";
+	import { readCommunityTotal } from "../../lib/community/read-cache";
+
+	function refreshTrajectoryCount(root: HTMLElement) {
+		const el = root.querySelector<HTMLElement>("[data-stat-trajectory]");
+		if (!el) return;
+		void readCommunityTotal(() =>
+			getCommunityAdapter()
+				.listPosts({ limit: 1 })
+				.then((result) => result.total),
+		)
+			.then((total) => {
+				el.textContent = total.toLocaleString("en-US");
+			})
+			.catch(() => {
 				// 容错降级：API 失败时不影响其他统计展示
-			}
-		}
-		updateTrajectoryCount();
-		if (window.swup?.hooks) {
-			window.swup.hooks.on("content:replace", updateTrajectoryCount);
-		} else {
-			document.addEventListener("swup:enable", () => {
-				window.swup?.hooks?.on("content:replace", updateTrajectoryCount);
 			});
+	}
+
+	function setupSiteStats() {
+		const scope = window as Window & { __alisterSiteStatsBound?: boolean };
+		if (scope.__alisterSiteStatsBound) return;
+
+		const roots = Array.from(document.querySelectorAll<HTMLElement>(".m3-site-stats")).filter(
+			(root) => root.dataset.statsCommunityEnabled === "true",
+		);
+		if (!roots.length) return;
+		scope.__alisterSiteStatsBound = true;
+
+		const sync = () => roots.forEach(refreshTrajectoryCount);
+		sync();
+
+		// Returns undefined (not a promise) so Swup never awaits this read.
+		const onContentReplace = () => {
+			sync();
+		};
+		if (window.swup?.hooks) {
+			window.swup.hooks.on("content:replace", onContentReplace);
+		} else {
+			document.addEventListener(
+				"swup:enable",
+				() => window.swup?.hooks?.on("content:replace", onContentReplace),
+				{ once: true },
+			);
 		}
-	})();
+	}
+
+	setupSiteStats();
 </script>
