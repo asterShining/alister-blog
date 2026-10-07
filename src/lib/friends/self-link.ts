@@ -49,3 +49,39 @@ export function getSelfLinkCopyText(info: SelfLinkInfo = getSelfLinkInfo()): str
     `rss: ${info.rss}`,
   ].join("\n");
 }
+
+/**
+ * Retrieve owner contact email from profileConfig.links.
+ */
+export function getOwnerEmail(): string {
+  const emailLink = profileConfig.links.find(
+    (item) => item.name.toLowerCase() === "email" || item.url.startsWith("mailto:"),
+  );
+  if (emailLink) {
+    return emailLink.url.replace(/^mailto:/, "").trim();
+  }
+  return "3335679109@qq.com";
+}
+
+/**
+ * Generate properly encoded mailto URL for friend link application.
+ */
+export function getFriendApplyMailtoUrl(): string {
+  const email = getOwnerEmail();
+  const subject = "友链申请";
+  const body = [
+    "你好，我想申请友链。",
+    "",
+    "name: ",
+    "link: ",
+    "avatar: ",
+    "descr: ",
+    "rss: ",
+    "",
+    "谢谢！",
+  ].join("\n");
+
+  const query = `subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+  return `mailto:${email}?${query}`;
+}
+

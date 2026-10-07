@@ -64,8 +64,15 @@ export class FriendSelfLinkElement extends HTMLElement {
     const iconCheck = this.querySelector<HTMLElement>("[data-icon-check]");
     const statusEl = this.querySelector<HTMLElement>("[data-copy-status]");
     const copyData = this.getAttribute("data-copy-text") || button?.dataset.copyText;
-
     if (!button || !copyData) return;
+
+    const originalLabel = labelEl?.textContent?.trim() || "一键复制友链信息";
+    const originalAriaLabel = button.getAttribute("aria-label") || originalLabel;
+    const isEmailCopy = copyData.includes("@") && !copyData.includes("\n");
+    const successStatus = isEmailCopy
+      ? "邮箱地址已成功复制到剪贴板"
+      : "友链信息已成功复制到剪贴板";
+    const successAria = isEmailCopy ? "已复制邮箱" : "已复制友链信息";
 
     const success = await this.copyToClipboard(copyData);
 
@@ -76,16 +83,16 @@ export class FriendSelfLinkElement extends HTMLElement {
 
     if (success) {
       button.classList.add("friend-self-link__copy-btn--copied");
-      button.setAttribute("aria-label", "已复制友链信息");
+      button.setAttribute("aria-label", successAria);
       if (labelEl) labelEl.textContent = "已复制";
       if (iconCopy) iconCopy.hidden = true;
       if (iconCheck) iconCheck.hidden = false;
-      if (statusEl) statusEl.textContent = "友链信息已成功复制到剪贴板";
+      if (statusEl) statusEl.textContent = successStatus;
 
       this.resetTimer = window.setTimeout(() => {
         button.classList.remove("friend-self-link__copy-btn--copied");
-        button.setAttribute("aria-label", "一键复制友链信息");
-        if (labelEl) labelEl.textContent = "一键复制友链信息";
+        button.setAttribute("aria-label", originalAriaLabel);
+        if (labelEl) labelEl.textContent = originalLabel;
         if (iconCopy) iconCopy.hidden = false;
         if (iconCheck) iconCheck.hidden = true;
         if (statusEl) statusEl.textContent = "";
@@ -98,7 +105,8 @@ export class FriendSelfLinkElement extends HTMLElement {
 
       this.resetTimer = window.setTimeout(() => {
         button.classList.remove("friend-self-link__copy-btn--failed");
-        if (labelEl) labelEl.textContent = "一键复制友链信息";
+        button.setAttribute("aria-label", originalAriaLabel);
+        if (labelEl) labelEl.textContent = originalLabel;
         if (statusEl) statusEl.textContent = "";
         this.resetTimer = undefined;
       }, 3000);

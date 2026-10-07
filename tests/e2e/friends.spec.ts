@@ -20,7 +20,7 @@ test.describe("Friends Self Link Card and Clipboard", () => {
 	test("Case 1: Direct load /friends/ displays My Link Card with all 5 fields and avatar", async ({ page }) => {
 		await page.goto("/friends/");
 
-		const selfCard = page.locator("friend-self-link");
+		const selfCard = page.locator(".friend-self-link");
 		await expect(selfCard).toBeVisible();
 
 		// Check title & badge
@@ -60,14 +60,14 @@ test.describe("Friends Self Link Card and Clipboard", () => {
 	test("Case 2: One-click copy copies exact 5-line text and updates visual state", async ({ page }) => {
 		await page.goto("/friends/");
 
-		const copyBtn = page.locator("friend-self-link [data-copy-btn]");
+		const copyBtn = page.locator(".friend-self-link [data-copy-btn]");
 		await copyBtn.click();
 
 		// Check button visual feedback
 		await expect(copyBtn).toHaveText(/已复制/);
 		await expect(copyBtn).toHaveClass(/friend-self-link__copy-btn--copied/);
-		await expect(page.locator("friend-self-link [data-icon-check]")).toBeVisible();
-		await expect(page.locator("friend-self-link [data-icon-copy]")).not.toBeVisible();
+		await expect(page.locator(".friend-self-link [data-icon-check]")).toBeVisible();
+		await expect(page.locator(".friend-self-link [data-icon-copy]")).not.toBeVisible();
 
 		// Read clipboard content
 		const clipboardText = await page.evaluate(async () => {
@@ -76,7 +76,7 @@ test.describe("Friends Self Link Card and Clipboard", () => {
 		expect(clipboardText).toBe(EXPECTED_CLIPBOARD_TEXT);
 
 		// Check aria-live status text
-		const statusEl = page.locator("friend-self-link [data-copy-status]");
+		const statusEl = page.locator(".friend-self-link [data-copy-status]");
 		await expect(statusEl).toHaveText("友链信息已成功复制到剪贴板");
 	});
 
@@ -89,7 +89,7 @@ test.describe("Friends Self Link Card and Clipboard", () => {
 		await friendsNavLink.click();
 		await expect(page).toHaveURL(/\/friends\/$/);
 
-		const selfCard = page.locator("friend-self-link");
+		const selfCard = page.locator(".friend-self-link");
 		await expect(selfCard).toBeVisible();
 
 		const copyBtn = selfCard.locator("[data-copy-btn]");
@@ -105,7 +105,7 @@ test.describe("Friends Self Link Card and Clipboard", () => {
 	test("Case 4: Keyboard navigation (Tab and Enter / Space) can trigger copy", async ({ page }) => {
 		await page.goto("/friends/");
 
-		const copyBtn = page.locator("friend-self-link [data-copy-btn]");
+		const copyBtn = page.locator(".friend-self-link [data-copy-btn]");
 		await copyBtn.focus();
 		await page.keyboard.press("Enter");
 
@@ -120,8 +120,11 @@ test.describe("Friends Self Link Card and Clipboard", () => {
 		await page.setViewportSize({ width: 390, height: 844 });
 		await page.goto("/friends/");
 
-		const selfCard = page.locator("friend-self-link");
+		const selfCard = page.locator(".friend-self-link");
 		await expect(selfCard).toBeVisible();
+
+		const applyCard = page.locator(".friend-apply");
+		await expect(applyCard).toBeVisible();
 
 		// Verify copy button is visible and clickable on mobile
 		const copyBtn = selfCard.locator("[data-copy-btn]");
@@ -153,7 +156,7 @@ test.describe("Friends Self Link Card and Clipboard", () => {
 		await page.locator('a[href="/friends/"]:visible').first().click();
 		await expect(page).toHaveURL(/\/friends\/$/);
 
-		const copyBtn = page.locator("friend-self-link [data-copy-btn]");
+		const copyBtn = page.locator(".friend-self-link [data-copy-btn]");
 		await expect(copyBtn).toBeVisible();
 		await copyBtn.click();
 		await expect(copyBtn).toHaveText(/已复制/);
@@ -186,4 +189,92 @@ test.describe("Friends Self Link Card and Clipboard", () => {
 		await expect(evilKnight).toHaveAttribute("href", "https://evil0knight.github.io/quartz/");
 		await expect(evilKnight).toContainText("嵌入式软件,笔记博客,欢迎交流");
 	});
+
+	test("Case 8: Application section displays guidance, email, and valid mailto CTA with copy email", async ({ page }) => {
+		await page.goto("/friends/");
+
+		const applySection = page.locator(".friend-apply");
+		await expect(applySection).toBeVisible();
+
+		// Check heading & content
+		await expect(applySection.locator(".friend-apply__title")).toHaveText("友链申请");
+		await expect(applySection.locator(".friend-apply__paragraph")).toContainText("如果你也想交换友链，欢迎通过邮件联系我。");
+		await expect(applySection.locator(".friend-apply__paragraph")).toContainText("申请时请附上博客名称、链接、头像、简介，以及 RSS 地址");
+		await expect(applySection.locator(".friend-apply__note")).toContainText("本站友链信息可以直接使用上方“一键复制友链信息”。");
+
+		// Check visible email
+		await expect(applySection.locator(".friend-apply__email-address")).toHaveText("3335679109@qq.com");
+		await expect(applySection.locator(".friend-apply__email-address")).toHaveAttribute("href", "mailto:3335679109@qq.com");
+
+		// Check mailto CTA button href & params
+		const mailtoBtn = applySection.locator(".friend-apply__mailto-btn");
+		await expect(mailtoBtn).toBeVisible();
+		await expect(mailtoBtn).toContainText("邮件申请友链");
+
+		const href = await mailtoBtn.getAttribute("href");
+		expect(href).toBeTruthy();
+		expect(href).toMatch(/^mailto:3335679109@qq\.com\?/);
+
+		const parsedUrl = new URL(href!);
+		expect(parsedUrl.protocol).toBe("mailto:");
+		expect(parsedUrl.pathname).toBe("3335679109@qq.com");
+
+		const subject = parsedUrl.searchParams.get("subject") || "";
+		expect(subject).toContain("友链申请");
+
+		const body = parsedUrl.searchParams.get("body") || "";
+		expect(body).toContain("name:");
+		expect(body).toContain("link:");
+		expect(body).toContain("avatar:");
+		expect(body).toContain("descr:");
+		expect(body).toContain("rss:");
+
+		// Check copy email button
+		const copyEmailBtn = applySection.locator(".friend-apply__copy-btn");
+		await expect(copyEmailBtn).toBeVisible();
+		await copyEmailBtn.click();
+		await expect(copyEmailBtn).toContainText("已复制");
+
+		const copiedEmail = await page.evaluate(async () => {
+			return navigator.clipboard.readText();
+		});
+		expect(copiedEmail).toBe("3335679109@qq.com");
+	});
+
+	test("Case 9: Homepage Profile displays GitHub and Email social links in order with exact mailto", async ({ page }) => {
+		await page.goto("/");
+
+		// Profile social links
+		const profileLinks = page.locator(".m3-profile__links a");
+		await expect(profileLinks).toHaveCount(2);
+
+		// 1st link: GitHub
+		const githubLink = profileLinks.nth(0);
+		await expect(githubLink).toHaveAttribute("href", "https://github.com/asterShining");
+
+		// 2nd link: Email
+		const emailLink = profileLinks.nth(1);
+		await expect(emailLink).toHaveAttribute("href", "mailto:3335679109@qq.com");
+	});
+
+	test("Case 10: Home -> Friends via Swup retains Application section and correct mailto link", async ({ page }) => {
+		await page.goto("/");
+		await page.waitForFunction(() => Boolean((window as Window & { swup?: unknown }).swup));
+
+		// Navigate to Friends via in-site Swup
+		const friendsNavLink = page.locator('a[href="/friends/"]:visible').first();
+		await friendsNavLink.click();
+		await expect(page).toHaveURL(/\/friends\/$/);
+
+		const applySection = page.locator(".friend-apply");
+		await expect(applySection).toBeVisible();
+		await expect(applySection.locator(".friend-apply__title")).toHaveText("友链申请");
+		await expect(applySection.locator(".friend-apply__email-address")).toHaveText("3335679109@qq.com");
+
+		const mailtoBtn = applySection.locator(".friend-apply__mailto-btn");
+		await expect(mailtoBtn).toBeVisible();
+		const href = await mailtoBtn.getAttribute("href");
+		expect(href).toMatch(/^mailto:3335679109@qq\.com\?/);
+	});
 });
+

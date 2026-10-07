@@ -10,7 +10,7 @@
  *    重新执行文档内所有 inline 脚本，而这个标签重跑没有任何意义。
  *
  * 2. 轨迹总数走打包后的 module。ScriptsPlugin 重新插入
- *    `<script type="module">` 不会让它二次求值（ES module 每个文档只执行一次），
+ *    script[type="module"] 不会让它二次求值（ES module 每个文档只执行一次），
  *    因此天然免疫 `content:replace` handler 累积。它**必须**保持为“被处理的”
  *    脚本：在这上面加任何额外属性都会让 Astro 原样输出，把裸 `import` 发给浏览器。
  */

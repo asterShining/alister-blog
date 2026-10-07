@@ -16,11 +16,11 @@ test("Capture Friends screenshots across themes and viewports", async ({ page, c
 	await page.screenshot({ path: "artifacts/friends/friends-starry-1440.png" });
 
 	// Card zoom before copy
-	const card = page.locator("friend-self-link");
+	const card = page.locator(".friend-self-link");
 	await card.screenshot({ path: "artifacts/friends/friends-copy-before.png" });
 
 	// Click copy button -> Card zoom success state
-	await page.locator("friend-self-link [data-copy-btn]").click();
+	await page.locator(".friend-self-link [data-copy-btn]").click();
 	await page.waitForTimeout(250);
 	await card.screenshot({ path: "artifacts/friends/friends-copy-success.png" });
 

@@ -6,6 +6,7 @@ import TextField from "@components/atoms/input/TextField.svelte";
 import FriendCard from "@components/molecules/FriendCard.svelte";
 import PageHeader from "@components/molecules/PageHeader.svelte";
 import FriendSelfLinkCard from "../friends/FriendSelfLinkCard.svelte";
+import FriendApplyCard from "../friends/FriendApplyCard.svelte";
 import I18nKey from "@i18n/i18nKey";
 import { i18n } from "@i18n/translation";
 import Icon from "@iconify/svelte";
@@ -109,6 +110,9 @@ onMount(() => {
 
 	<!-- 站主自己的友链信息卡片（独立区块，一键复制） -->
 	<FriendSelfLinkCard />
+
+	<!-- 友链申请说明与邮件申请入口（独立辅助区块） -->
+	<FriendApplyCard />
 
 	<!-- 朋友列表标题与装饰 -->
 	<div class="friend-section__friends-header">
