@@ -12,8 +12,13 @@ test("Capture Friends screenshots across themes and viewports", async ({ page, c
 	});
 	await page.goto("/friends/");
 	await page.waitForSelector("friend-self-link");
+	await page.waitForSelector(".friend-guestbook");
 	await page.waitForTimeout(600);
-	await page.screenshot({ path: "artifacts/friends/friends-starry-1440.png" });
+	await page.screenshot({ path: "artifacts/friends/friends-starry-1440.png", fullPage: true });
+
+	// Guestbook zoom
+	const guestbook = page.locator(".friend-guestbook");
+	await guestbook.screenshot({ path: "artifacts/friends/friends-guestbook-starry.png" });
 
 	// Card zoom before copy
 	const card = page.locator(".friend-self-link");
@@ -36,7 +41,8 @@ test("Capture Friends screenshots across themes and viewports", async ({ page, c
 		window.dispatchEvent(new CustomEvent("shirone:theme-change"));
 	});
 	await page.waitForTimeout(600);
-	await page.screenshot({ path: "artifacts/friends/friends-summer-1440.png" });
+	await page.screenshot({ path: "artifacts/friends/friends-summer-1440.png", fullPage: true });
+	await guestbook.screenshot({ path: "artifacts/friends/friends-guestbook-summer.png" });
 
 	// 3. Summer (Light) 390
 	await page.setViewportSize({ width: 390, height: 844 });
@@ -48,7 +54,7 @@ test("Capture Friends screenshots across themes and viewports", async ({ page, c
 		window.dispatchEvent(new CustomEvent("shirone:theme-change"));
 	});
 	await page.waitForTimeout(600);
-	await page.screenshot({ path: "artifacts/friends/friends-summer-390.png" });
+	await page.screenshot({ path: "artifacts/friends/friends-summer-390.png", fullPage: true });
 
 	// 4. Starry (Dark) 390
 	await page.evaluate(() => {
@@ -58,5 +64,5 @@ test("Capture Friends screenshots across themes and viewports", async ({ page, c
 		window.dispatchEvent(new CustomEvent("shirone:theme-change"));
 	});
 	await page.waitForTimeout(600);
-	await page.screenshot({ path: "artifacts/friends/friends-starry-390.png" });
+	await page.screenshot({ path: "artifacts/friends/friends-starry-390.png", fullPage: true });
 });

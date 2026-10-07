@@ -7,6 +7,7 @@ import FriendCard from "@components/molecules/FriendCard.svelte";
 import PageHeader from "@components/molecules/PageHeader.svelte";
 import FriendSelfLinkCard from "../friends/FriendSelfLinkCard.svelte";
 import FriendApplyCard from "../friends/FriendApplyCard.svelte";
+import FriendGuestbook from "../friends/FriendGuestbook.svelte";
 import I18nKey from "@i18n/i18nKey";
 import { i18n } from "@i18n/translation";
 import Icon from "@iconify/svelte";
@@ -184,6 +185,9 @@ onMount(() => {
 			<span>{i18n(I18nKey.friendsNoResults)}</span>
 		</div>
 	{/if}
+
+	<!-- 留言板（独立底部交流区，复用 comments 体系） -->
+	<FriendGuestbook />
 </Card>
 
 <style lang="stylus">

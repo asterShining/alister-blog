@@ -1,6 +1,9 @@
 import { siteConfig } from "@config/siteConfig";
 import { profileConfig } from "@config/profileConfig";
 
+/** Synthetic post slug for Friends Guestbook */
+export const FRIENDS_GUESTBOOK_SLUG = "friends-guestbook";
+
 export interface SelfLinkInfo {
   name: string;
   link: string;
