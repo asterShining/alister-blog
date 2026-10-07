@@ -74,6 +74,9 @@ test-results/
 playwright-report/
 tests/site/visual.spec.ts-snapshots/
 
+# Performance benchmark artifacts (see docs/performance.md and scripts/perf/)
+artifacts/perf/
+
 # Lighthouse local reports
 artifacts/lighthouse/*
 !artifacts/lighthouse/.gitkeep

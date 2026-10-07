@@ -94,6 +94,17 @@ Available test and validation commands:
 
 Use appropriately sized WebP assets. Avoid large-area strong `backdrop-filter`, full-screen animated blur/filter, gratuitous `will-change` or `translateZ(0)`, and canvas wallpaper animation. Theme transitions should be short, non-blocking, and reduced-motion aware.
 
+### Navigation Performance Rules
+
+Swup drives all in-site navigation, so anything registered against it sits on the user's critical path. These rules are load-bearing; `docs/performance.md` has the measurements behind them and the harnesses to re-check them.
+
+- **Never register an `async` function directly on a Swup hook that runs inside a navigation** (`content:replace`, `page:view`, `visit:*`). Swup awaits any handler that returns a thenable, which puts that I/O on the critical path of every page change. Fire and forget, or return `undefined` explicitly.
+- **Prefer a bundled module over an inline `<script>` for anything touching Swup hooks or the network.** `@swup/scripts-plugin` defaults to a document-wide scope and re-executes every inline script on each navigation, so an inline script that registers a hook registers one more handler every time. Module scripts are evaluated once per document. Mark project-owned inline scripts that must not re-run with `data-swup-ignore-script` — but never add extra attributes to a *bundled* `<script>`, or Astro emits it verbatim with its `import` statements.
+- **Never hide an image you do not want fetched with `opacity: 0` or `visibility: hidden`.** Browsers still download it. Use `display: none`, or attach the image after idle.
+- **Read shared public data through `src/lib/community/read-cache.ts`**, which de-duplicates concurrent requests and memoises for a short TTL. Do not add a second cache, and do not persist public content to `localStorage`.
+- **Keep the page background and Hero mounted across navigation**, and do not replay theme transitions during a visit.
+- Measure with `scripts/perf/` before claiming an improvement, and write results to `artifacts/perf/` — Playwright deletes `test-results/` at the start of every run. Judge byte reductions only under `--throttle`; on localhost a saved byte costs nothing.
+
 ## Git and Completion
 
 Use descriptive Conventional Commits. Keep diffs focused and reviewable; do not add dependencies without need. Finish with changed files and purpose, validation commands and results, current branch and `git status`, known limitations, and the next useful step. For visual work include tested viewports; for performance work report any dev versus preview difference.
