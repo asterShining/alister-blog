@@ -19,6 +19,8 @@
  */
 import { resolvePageKey } from "@utils/nav-utils";
 import { bindPostsViewSwitcher, syncPostsView } from "./posts-view-switcher";
+import "./friend-self-link";
+import "./post-comments";
 
 const CATEGORY_BAR_REGION_ID = "category-bar-region";
 /** 归档分类栏唯一可见的页面（去尾斜杠形式）。 */

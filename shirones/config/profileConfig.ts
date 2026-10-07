@@ -15,5 +15,10 @@ export const profileConfig: ProfileConfig = withUserConfig("profile", {
 			icon: "fa6-brands:github",
 			url: "https://github.com/asterShining",
 		},
+		{
+			name: "Email",
+			icon: "fa6-solid:envelope",
+			url: "mailto:3335679109@qq.com",
+		},
 	],
 });

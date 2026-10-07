@@ -92,6 +92,7 @@ class PostComments extends HTMLElement {
   private get slug() { return this.dataset.slug!; }
   private get apiBase() { return this.dataset.apiBase!; }
   private get sitekey() { return this.dataset.sitekey!; }
+  private get isGuestbook() { return this.dataset.variant === 'guestbook'; }
 
   private endpoint() { return `${this.apiBase}comments/${encodeURIComponent(this.slug)}`; }
 
@@ -109,11 +110,11 @@ class PostComments extends HTMLElement {
       this.renderComments(comments);
     } catch {
       if (controller.signal.aborted) return;
-      this.countEl.textContent = '评论';
+      this.countEl.textContent = this.isGuestbook ? '留言' : '评论';
       this.listEl.innerHTML = '';
       const msg = document.createElement('p');
       msg.className = 'comment-section__empty';
-      msg.textContent = '评论加载失败，请刷新页面重试。';
+      msg.textContent = this.isGuestbook ? '留言加载失败，请稍后重试。' : '评论加载失败，请刷新页面重试。';
       this.listEl.appendChild(msg);
     }
 
@@ -158,13 +159,14 @@ class PostComments extends HTMLElement {
 
   // --- Render comments ---
   private renderComments(comments: CommentData[]) {
-    this.countEl.textContent = `评论 ${comments.length}`;
+    const label = this.isGuestbook ? '留言' : '评论';
+    this.countEl.textContent = `${label} ${comments.length}`;
     this.listEl.innerHTML = '';
 
     if (comments.length === 0) {
       const msg = document.createElement('p');
       msg.className = 'comment-section__empty';
-      msg.textContent = '暂无评论，来说点什么吧。';
+      msg.textContent = this.isGuestbook ? '暂无留言，来留下第一条足迹吧。' : '暂无评论，来说点什么吧。';
       this.listEl.appendChild(msg);
       return;
     }
@@ -232,7 +234,7 @@ class PostComments extends HTMLElement {
       return;
     }
     if ([...content].length < 1 || [...content].length > 1000) {
-      this.statusEl.textContent = '评论内容应为 1-1000 个字符。';
+      this.statusEl.textContent = this.isGuestbook ? '留言内容应为 1-1000 个字符。' : '评论内容应为 1-1000 个字符。';
       return;
     }
 
@@ -265,7 +267,8 @@ class PostComments extends HTMLElement {
       }
       if (!response.ok) {
         const data = await response.json().catch(() => null);
-        this.statusEl.textContent = data?.error ?? '发表评论失败，请重试。';
+        const fallbackFail = this.isGuestbook ? '发布留言失败，请重试。' : '发表评论失败，请重试。';
+        this.statusEl.textContent = data?.error ?? fallbackFail;
         this.resetTurnstile();
         return;
       }
@@ -282,17 +285,18 @@ class PostComments extends HTMLElement {
 
       // Update count
       const existing = this.listEl.querySelectorAll('.comment-item').length;
-      this.countEl.textContent = `评论 ${existing}`;
+      const label = this.isGuestbook ? '留言' : '评论';
+      this.countEl.textContent = `${label} ${existing}`;
 
       // Clear content, keep nickname
       this.contentInput.value = '';
-      this.statusEl.textContent = '评论发表成功！';
+      this.statusEl.textContent = this.isGuestbook ? '留言成功！' : '评论发表成功！';
 
       // Reset Turnstile for next submission (tokens are single-use)
       this.resetTurnstile();
     } catch {
       if (!this.controller?.signal.aborted) {
-        this.statusEl.textContent = '发表评论失败，请重试。';
+        this.statusEl.textContent = this.isGuestbook ? '发布留言失败，请重试。' : '发表评论失败，请重试。';
         this.resetTurnstile();
       }
     } finally {

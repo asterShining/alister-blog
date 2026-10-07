@@ -153,6 +153,7 @@ test('@smoke Swup navigation preserves comments state and avoids duplicate widge
   const fixture = await apiFixture(page);
   try {
     await page.goto('/');
+    await page.waitForFunction(() => Boolean(window.swup));
     const start = await page.evaluate(() => performance.timeOrigin);
 
     // Navigate to article via Swup
