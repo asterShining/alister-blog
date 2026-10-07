@@ -5,10 +5,19 @@ measurements showed, which optimizations were kept, and which were deliberately
 rejected. Raw artifacts (JSON + screenshots) are written to `artifacts/perf/`,
 which is gitignored.
 
-> **Status:** these optimizations were developed and validated on a feature
-> branch against a local production-like preview and the read-only Production
-> baseline. They are **not** deployed. Production still runs the pre-optimization
-> build until the owner reviews and merges.
+> **Status: Production Validated.** All six optimizations are deployed and
+> verified on the live origin.
+>
+> - Feature PR [#14](https://github.com/asterShining/alister-blog/pull/14) →
+>   `dev` (squash `179cdee`), Production PR
+>   [#15](https://github.com/asterShining/alister-blog/pull/15) → `main`
+>   (squash `2fbdc31b23e805b3144a848848a5d418bf21f847`).
+> - Production `main`: `2fbdc31b23e805b3144a848848a5d418bf21f847`; deployment
+>   `b44076e6-dabb-4d56-9e73-398e2c21281e` (Cloudflare Pages Git Integration,
+>   branch `main`, `COMMUNITY_ENABLE=true`).
+> - Production before/after: navigation **2594–3897 ms → 746 ms**, `content:replace`
+>   handlers constant at 10 over 32 navigations, 0 Community API requests per
+>   ordinary navigation, 0 console errors. See section 6.2.
 
 ## 1. Measurement Tooling
 
@@ -272,7 +281,9 @@ site, (b) the physical round trip, and (c) per-request Function/D1 latency.
 | Preloading the CJK font | It is the largest single resource, but `preload: false` is deliberate and the font already uses `display: swap`; preloading would move bytes back onto the critical path. |
 | Consolidating the 58 script requests | Would require changing the theme's chunking (`viteBuildShared.rollupOptions` lives in the theme package) for a low measured benefit. |
 
-## 6. Cloudflare Pages Preview Validation
+## 6. Cloudflare Pages Preview and Production Validation
+
+### 6.1 Preview
 
 `COMMUNITY_ENABLE` is a **Production-only** build variable and the preview
 environment has no usable `DB` binding (`/api/v1/health` 503,
@@ -296,14 +307,107 @@ replace window 149 ms, post-replace JS 0.8 ms, in-transition 118 ms. Community
 API requests per navigation were 0, confirming the disabled-flag isolation still
 holds, and a 24-navigation session drifted **-73 ms** with 0 console errors.
 
-Production still runs the old build, so its numbers are unchanged until this
-branch is merged. The API-blocked falsification above (2594 → 861 ms) is the best
-estimate of what Production would do after the fix, because it removes the API
-cost without removing the round trip.
+Production still ran the old build at the time of that preview run. The
+API-blocked falsification above (2594 → 861 ms) was the estimate of what
+Production would do after the fix, because it removes the API cost without
+removing the round trip. Section 6.2 confirms the deployed result: the estimate
+was conservative.
+
+### 6.2 Production (deployed)
+
+Measured against the live origin `https://alistereno.top` after the merge, with
+the same harnesses and the same method as the baseline (`bench.mjs nav`, 5 rounds
+per path, n=5 each; Chromium 1440×900, warm connection).
+
+| Path | Baseline (2026-10-06) | Deployed | Delta |
+| --- | ---: | ---: | ---: |
+| Home → Posts | 2594 ms | **747 ms** | −1847 ms (−71 %) |
+| Posts → Archive | 3462 ms | **747 ms** | −2715 ms (−78 %) |
+| Archive → Home | 3897 ms | **746 ms** | −3151 ms (−81 %) |
+| Home → Trajectory | — | **747 ms** | — |
+| Trajectory → Posts | — | **746 ms** | — |
+| Friends → About | — | **746 ms** | — |
+
+Phase split on Production: out-transition 146 ms, DOM-replace window 149 ms,
+post-replace JS 0.8–1.0 ms, in-transition 118–130 ms.
+
+**Handler leak — the actual defect — is gone.** `stability.mjs` over 32
+navigations on the live origin: `content:replace` handlers **10 → 10** (the
+pre-fix build went 14 → 33 over 19 navigations), `page:view` 3 → 3,
+`html` scripts 23 → 23, Community API resources 2 → 3 for the whole session, and
+**0 console errors**. Wall time drifted **−693 ms** (first five navigations
+1043 ms avg → last five 350 ms avg). A second probe over 32 navigations measured
+perceived **747.3 ms (first 10) vs 746.7 ms (last 10)**, a drift of −0.6 ms.
+
+**Community API requests.** Audited per navigation (`n=5` per path, request URLs
+recorded inside the navigation window):
+
+| Path | API requests | Community requests |
+| --- | ---: | ---: |
+| Home → Posts | 0 | 0 |
+| Posts → Archive | 0 | 0 |
+| Archive → Home | 0 | 0 |
+| Home → Trajectory | 1 | 1 (`/api/v1/community/posts`) |
+| Trajectory → Posts | 0 | 0 |
+| Posts → Friends | 0 | 0 |
+| Friends → About | 0 | 0 |
+| About → Home | 0 | 0 |
+
+Only entering `/community/` issues a request, and that single response also
+supplies the sidebar total. Across 32 stress navigations the API requests per
+navigation were median 0, p75 0, **max 1** — the pre-fix 2 → 42 growth is gone.
+Per *page load* (not navigation) every route issues exactly one
+`GET /api/v1/community/posts?limit=1` for the sidebar total, and the homepage
+additionally issues `limit=50` for the feed: unchanged from the baseline.
+
+**Cold load.** Absolute numbers moved between the baseline and this run because
+this machine's download throughput fell from ~730 KB/s to ~250 KB/s
+(control origin `example.com` TTFB 218 ms → 470 ms, load average 3.4), so the
+pre-deploy and post-deploy figures are not directly comparable. Two controlled
+comparisons were run instead:
+
+1. **Deployed build vs itself** (`artifacts/perf/defer-ab.mjs`), interleaved, with
+   the inactive-skin deferral disabled in one arm, under a fixed 150 ms /
+   1.6 Mbit link so both arms get identical bandwidth: LCP **7436 → 9064 ms**
+   (p75 7796 → 10804), load 8277 → 9687 ms, 255 KB fewer bytes in the window.
+   The deferral is a clear win, not a regression.
+2. **Shipped vs previous deployment** (`artifacts/perf/origin-ab.mjs`), the live
+   pre-optimization build `091924d5` (`83e5cbe`) against the shipped `b44076e6`
+   (`2fbdc31`), alternating in the same minute so network drift cancels: LCP
+   **5876 → 2786 ms** (p75 8388 → 5076), load **7705 → 4552 ms** (p75 8854 →
+   5351), FCP 1682 → 1520 ms, 242 KB fewer bytes in the window. The LCP element
+   is the banner Hero of the *active* skin in both arms, which the deferral does
+   not touch.
+
+Absolute per-route Production cold numbers recorded during the rollout
+(medians of 5, fresh context), 1440×900:
+
+| Route | TTFB | FCP | LCP | Load | CLS |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| `/` | 794 ms | 2180 ms | 5792 ms | 5854 ms | 0.048 |
+| `/posts/` | 682 ms | 1680 ms | 6040 ms | 6024 ms | 0.000 |
+| `/community/` | 558 ms | 1896 ms | 5568 ms | 5733 ms | 0.025 |
+| `/archive/` | 1163 ms | 2384 ms | 4116 ms | 6103 ms | 0.001 |
+
+Mobile 390×844 homepage CLS is **0.106** — unchanged from the 0.105 baseline, so
+the known open item neither improved nor regressed (section 7).
+
+**Functional and visual acceptance.** 29/29 checks passed on the live origin with
+0 console errors: Home → Posts → 检索 → 文章 with Back/Forward, the 轨迹 entry and
+active state, `/community/` feed and the `community-start` detail rendering its
+Markdown, the homepage `全部 | 文章 | 轨迹` filter, the `/posts/` switcher, the
+`/archive/` frosted-glass bar (`blur(14px) saturate(1.18)`), Summer and Starry
+both rendering with both backdrop layers mounted, no horizontal overflow at 390 /
+768 / 1440 on `/`, `/posts/`, `/community/` and `/archive/`, and — the risky part
+of 4.3 — a theme switch immediately after first load still ends with both skins'
+artwork attached, so a deferred layer can never leave a permanently empty
+background.
 
 ## 7. Open Items (recommended follow-ups)
-1. **Mobile CLS 0.105 on the homepage** is above the "good" 0.1 threshold. The
-   trajectory cards are inserted asynchronously after the feed response, which
+1. **Mobile CLS 0.105 on the homepage** is above the "good" 0.1 threshold.
+   Re-measured on the deployed build: **0.106**, i.e. unchanged — the rollout
+   neither fixed nor worsened it. The trajectory cards are inserted
+   asynchronously after the feed response, which
    shifts the article list. Reserving space for the first card, or inserting
    below the fold, would fix it — but it changes layout, so it needs owner input.
 2. **The hidden banner `<img>`** downloads 125 KB with `fetchpriority="high"` on
