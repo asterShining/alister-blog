@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 
-const PREVIEW_BASE = 'https://30f5b0c3.alister-blog.pages.dev';
+const PREVIEW_BASE = 'https://ed90c2c6.alister-blog.pages.dev';
 
 test.describe('Cloudflare Pages Preview Verification', () => {
   test('Preview inspection across viewports, themes, and Swup navigation', async ({ page }) => {
@@ -68,6 +68,7 @@ test.describe('Cloudflare Pages Preview Verification', () => {
     // Nav to Friends
     await page.locator('a[href="/friends/"]:visible').first().click();
     await expect(page).toHaveURL(`${PREVIEW_BASE}/friends/`);
+    await page.locator('.friend-guestbook').scrollIntoViewIfNeeded();
     await expect(page.locator('.friend-guestbook')).toBeVisible();
 
     // Nav to Home
@@ -77,6 +78,7 @@ test.describe('Cloudflare Pages Preview Verification', () => {
     // Nav to Friends again
     await page.locator('a[href="/friends/"]:visible').first().click();
     await expect(page).toHaveURL(`${PREVIEW_BASE}/friends/`);
+    await page.locator('.friend-guestbook').scrollIntoViewIfNeeded();
     await expect(page.locator('.friend-guestbook')).toBeVisible();
 
     // Check console errors
