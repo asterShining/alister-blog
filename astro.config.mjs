@@ -42,6 +42,18 @@ const starryTheme = {
           if (window.__alisterRootFallbackBound) return;
           window.__alisterRootFallbackBound = true;
           window.addEventListener("shirone:theme-change", syncRootColor);
+
+          // Attach the inactive skin's wallpaper/Hero artwork once the page is
+          // idle. Until then only the active skin's images are requested, which
+          // keeps ~350 KB of never-visible art off the critical path. See the
+          // matching selectors in src/styles/themes/starry.css.
+          const markArtReady = () => root.classList.add("theme-art-ready");
+          const afterIdle = () =>
+            "requestIdleCallback" in window
+              ? window.requestIdleCallback(markArtReady, { timeout: 3000 })
+              : window.setTimeout(markArtReady, 200);
+          if (document.readyState === "complete") afterIdle();
+          else window.addEventListener("load", afterIdle, { once: true });
         })();`,
       );
       injectScript(

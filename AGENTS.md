@@ -31,15 +31,16 @@ Markdown/MDX under `shirones/content/posts/` is the article source of truth. Fol
 Community is an independent short-post dynamic square (status updates, debug logs, notes, multi-image posts) completely decoupled from `/posts/` articles:
 - **Authoritative Source**: JD Cloud PostgreSQL (`alister-api`) is the single source of truth for management and writing.
 - **Edge Delivery**: Cloudflare D1 (`alister-public`) serves as the read-only replica. Private Operator CLI writes PostgreSQL drafts; explicit publish and manual Publisher reconciliation deliver eligible content to D1. The CLI never writes D1.
-- **Production Feature State**: `COMMUNITY_ENABLE` is a build-time variable read by `shirones/config/communityConfig.ts`; `true` or `1` enables Community navigation/routes. Local default remains disabled. Current Production frontend status is **ENABLED** (verified on live origin and canonical deployment `a8f940b0-8c6b-4073-a95d-eeb98e58e609`).
+- **Production Feature State**: `COMMUNITY_ENABLE` is a build-time variable read by `shirones/config/communityConfig.ts`; `true` or `1` enables Community navigation/routes. Local default remains disabled. Current Production frontend status is **ENABLED** (verified on live origin and canonical deployment `091924d5-5fc6-496d-b370-2cf274521988`); the user-visible entry reads **轨迹**.
 - **Feature Isolation**: Governed by `shirones/config/communityConfig.ts` with `enable: false` by default. When disabled, the navigation item is removed, `/community/*` redirects to `/404/`, and zero network requests are made.
 - **Hybrid Delivery Architecture**: Static shells `/community/` and `/community/post/` are served from CDN cache (`public/_routes.json`). Dynamic path `/community/[slug]` is rewritten at the edge by `functions/community/[slug].ts` using `env.ASSETS.fetch()` to `/community/post/` without full-site SSR. Svelte 5 client components (`CommunityFeedApp.svelte`, `CommunityDetailApp.svelte`) fetch D1 public APIs at runtime.
 
 ### Current Community Handoff (2026-10-07)
 
 - Backend Production pipeline: **PASS**. JD PostgreSQL is authoritative; D1 `alister-public` is the read replica. Migration `0004` is applied. The first real post `community-start` (“社区，也从这里开始”) is published and replicated; feed/detail API acceptance passed with no internal-field leakage.
-- Frontend Production pipeline: **ENABLED & PASS**. Verified on live origin `https://alistereno.top`: desktop/mobile navigation displays “社区”, `/community/` displays the first post card, and `/community/community-start/` displays full Markdown content. Canonical deployment is `a8f940b0-8c6b-4073-a95d-eeb98e58e609` (commit `7f68d17a72d4597fca4fc0127356cc7e32ccca58`).
-- Blog Production `main`: `7f68d17a72d4597fca4fc0127356cc7e32ccca58`. Development `dev`: clean, tracking `origin/dev`.
+- Frontend Production pipeline: **ENABLED & PASS**. `/community/` displays the first post card and `/community/community-start/` displays full Markdown content.
+- Trajectory + Article UX Production: **PASS**. The user-visible name is now **轨迹** (internal naming stays Community: `communityConfig`, `/community/*`, `Community*` components). Frozen top navigation order: `首页 · 文章 · 轨迹 · 标签 · 归档 · 友链 · 关于`; homepage filter `全部 | 文章 | 轨迹`; `/posts/` is the article visual feed plus a `文章 | 检索` switcher; `/archive/` keeps its frosted-glass category bar. Publishing backend, D1 schema, and the Community API contract are unchanged.
+- Blog Production `main`: `83e5cbea2f161c78de8ceebe43b089f4120a0a31` (PR [#13](https://github.com/asterShining/alister-blog/pull/13)); canonical deployment `091924d5-5fc6-496d-b370-2cf274521988`, built with `COMMUNITY_ENABLE=true`. Development `dev`: clean, tracking `origin/dev`.
 - Next potential directions: R2 media pipeline, Community Likes & Comments, private Admin UI, or new regular blog articles. Image uploads, Community writes, and automatic sync remain out of scope for the current stage.
 
 ## Public APIs, Privacy, and Migrations
@@ -92,6 +93,17 @@ Available test and validation commands:
 - `pnpm exec playwright test tests/e2e/community.spec.mjs`: Community feature toggle isolation, 404 redirects, and fixture tests.
 
 Use appropriately sized WebP assets. Avoid large-area strong `backdrop-filter`, full-screen animated blur/filter, gratuitous `will-change` or `translateZ(0)`, and canvas wallpaper animation. Theme transitions should be short, non-blocking, and reduced-motion aware.
+
+### Navigation Performance Rules
+
+Swup drives all in-site navigation, so anything registered against it sits on the user's critical path. These rules are load-bearing; `docs/performance.md` has the measurements behind them and the harnesses to re-check them.
+
+- **Never register an `async` function directly on a Swup hook that runs inside a navigation** (`content:replace`, `page:view`, `visit:*`). Swup awaits any handler that returns a thenable, which puts that I/O on the critical path of every page change. Fire and forget, or return `undefined` explicitly.
+- **Prefer a bundled module over an inline `<script>` for anything touching Swup hooks or the network.** `@swup/scripts-plugin` defaults to a document-wide scope and re-executes every inline script on each navigation, so an inline script that registers a hook registers one more handler every time. Module scripts are evaluated once per document. Mark project-owned inline scripts that must not re-run with `data-swup-ignore-script` — but never add extra attributes to a *bundled* `<script>`, or Astro emits it verbatim with its `import` statements.
+- **Never hide an image you do not want fetched with `opacity: 0` or `visibility: hidden`.** Browsers still download it. Use `display: none`, or attach the image after idle.
+- **Read shared public data through `src/lib/community/read-cache.ts`**, which de-duplicates concurrent requests and memoises for a short TTL. Do not add a second cache, and do not persist public content to `localStorage`.
+- **Keep the page background and Hero mounted across navigation**, and do not replay theme transitions during a visit.
+- Measure with `scripts/perf/` before claiming an improvement, and write results to `artifacts/perf/` — Playwright deletes `test-results/` at the start of every run. Judge byte reductions only under `--throttle`; on localhost a saved byte costs nothing.
 
 ## Git and Completion
 

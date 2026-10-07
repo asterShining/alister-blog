@@ -117,6 +117,7 @@ activate-post-grid()
 
 <script>
 import { renderCommunityMarkdown, escapeHtml } from "../../lib/community/markdown";
+import { getCommunityAdapter } from "../../lib/community/adapter";
 import { packMasonry, setupMasonry } from "@utils/masonry";
 
 interface CommunityImage {
@@ -368,14 +369,15 @@ function initHomeFeed() {
 
   async function loadTrajectoryFeed() {
     try {
-      const res = await fetch("/api/v1/community/posts?limit=50");
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const json = await res.json();
-      if (json && json.code === 0 && Array.isArray(json.data?.posts)) {
-        insertTrajectoryCards(json.data.posts);
+      // Reads through the shared short-TTL community cache, so arriving back on
+      // the homepage within the TTL reuses the previous response instead of
+      // issuing `/api/v1/community/posts?limit=50` again.
+      const result = await getCommunityAdapter().listPosts({ limit: 50 });
+      if (Array.isArray(result.posts)) {
+        insertTrajectoryCards(result.posts as unknown as TrajectoryPost[]);
         return;
       }
-      throw new Error(json?.message || "Invalid payload");
+      throw new Error("Invalid payload");
     } catch {
       // 检查是否有本地测试/开发夹具（零破坏降级）
       const fixturesScript = document.getElementById("community-dev-fixtures");

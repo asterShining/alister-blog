@@ -62,6 +62,18 @@
 - Article Views/Like, Comments GET/UI, Turnstile widget, Friends, About, and theme persistence verified.
 - Images/R2/media base, Community Likes/Comments, multi-user posting, Admin UI, and automatic cron sync remain **not enabled**. Further capabilities require a separately defined and authorized phase.
 
+## Trajectory + Article UX Production Release — PASS (2026-10-07)
+
+- Naming: user-visible Community → **轨迹**; internal naming preserved (`communityConfig`, `/community/*`, `Community*` components). Route stays `/community/` (no URL migration).
+- Top navigation (frozen order): `首页 · 文章 · 轨迹 · 标签 · 归档 · 友链 · 关于`, with 轨迹 immediately after 文章. `i18nConfig` now maps `archive` → 归档, and `/posts/` provides the 文章 entry; the previous `追番` (`/anime/`) top-nav entry is no longer listed (the `/anime/` page itself is unchanged).
+- Homepage: `ContentTypeFilter` (`全部 | 文章 | 轨迹`, default 全部) inside `src/components/organisms/ContentTypeFilter.astro`; the 全部 feed merges articles and trajectories by publish time.
+- `/posts/`: article visual card feed by default plus an `文章 | 检索` view switcher (URL `?tab=search`, unchanged design). Fixed the Swup defect where the switcher was dead after in-site navigation (the page-level `is:inline` script lived outside the Swup container and never executed on client-side visits).
+- `/archive/`: CategoryBar (首页 / 归档 + article category chips) kept, restyled as a frosted-glass auxiliary bar driven by `--theme-aux-*` tokens (Starry and Summer). Note: the theme's chip classes are scoped to the theme's own chip component, so this bar now styles its own items with shared `.m3-state-layer` feedback.
+- Page-level chrome unified into one Swup sync entry (`src/scripts/page-scoped-chrome.ts`) plus the `/posts/` view state module (`src/scripts/posts-view-switcher.ts`); view state has a single source (URL) and a single DOM writer.
+- Release: feature PR [#12](https://github.com/asterShining/alister-blog/pull/12) → `dev`, Production PR [#13](https://github.com/asterShining/alister-blog/pull/13) → `main`. Production `main` `83e5cbea2f161c78de8ceebe43b089f4120a0a31`; canonical deployment `091924d5-5fc6-496d-b370-2cf274521988` built with `COMMUNITY_ENABLE=true`.
+- Production acceptance (public internet, Chromium, real clicks): navigation order and 轨迹 entry; homepage 全部/文章/轨迹 with `community-start` in 全部 and 轨迹 and excluded from 文章; `/posts/` switcher on direct load **and** after in-site (Swup) navigation; search panel By Year / By Category / By Tag; trajectory feed + detail (title, author, date, Markdown, back link); archive glass bar (surface, blur, border, spacing, active, count badge); friends/about isolation; full Swup chain 首页→文章→检索→轨迹→归档→友链→关于→首页 with no full reload; Summer/Starry persistence; 390/768/1440 without horizontal overflow; SiteStats 轨迹 = 1 from the public API.
+- Unchanged: Public API contract/feed (total=1, detail 200, missing 404 `POST_NOT_FOUND`, no internal leakage), Views/Like UI, Comments + Turnstile, Health, publishing backend (JD PostgreSQL authoritative, D1 read replica, manual Operator CLI + Publisher sync), no R2/media base.
+
 ## Recent Handoff (2026-10-07)
 
 ### Last completed
@@ -75,9 +87,9 @@
 
 ### Current state
 
-- Blog Production `main`: `7f68d17a72d4597fca4fc0127356cc7e32ccca58` (active deployment `a8f940b0-8c6b-4073-a95d-eeb98e58e609`).
+- Blog Production `main`: `83e5cbea2f161c78de8ceebe43b089f4120a0a31` (active deployment `091924d5-5fc6-496d-b370-2cf274521988`).
 - Development `dev`: clean, tracking `origin/dev`.
-- Community feature state: **Production ENABLED**.
+- Community feature state: **Production ENABLED** (user-visible name 轨迹).
 
 ### Next Potential Directions
 
