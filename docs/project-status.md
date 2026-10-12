@@ -6,7 +6,7 @@
 - `main` is Production; `dev` is Development.
 - Cloudflare Pages Git Integration deploys `main`.
 - Public Pages Functions use D1 database `alister-public`, bound as `DB`.
-- Current repository package version: `1.0.0` (`package.json`).
+- Current repository package version: `1.1.0` (`package.json`).
 
 ## Completed
 
@@ -74,22 +74,37 @@
 - Production acceptance (public internet, Chromium, real clicks): navigation order and 轨迹 entry; homepage 全部/文章/轨迹 with `community-start` in 全部 and 轨迹 and excluded from 文章; `/posts/` switcher on direct load **and** after in-site (Swup) navigation; search panel By Year / By Category / By Tag; trajectory feed + detail (title, author, date, Markdown, back link); archive glass bar (surface, blur, border, spacing, active, count badge); friends/about isolation; full Swup chain 首页→文章→检索→轨迹→归档→友链→关于→首页 with no full reload; Summer/Starry persistence; 390/768/1440 without horizontal overflow; SiteStats 轨迹 = 1 from the public API.
 - Unchanged: Public API contract/feed (total=1, detail 200, missing 404 `POST_NOT_FOUND`, no internal leakage), Views/Like UI, Comments + Turnstile, Health, publishing backend (JD PostgreSQL authoritative, D1 read replica, manual Operator CLI + Publisher sync), no R2/media base.
 
+## Friends Feature Production Release + v1.1.0 — PASS (2026-10-07)
+
+- Feature release: Self Link card with one-click copy, Friend Application, public email & profile email integration, and Friends Guestbook.
+- Production `main`: `252e006ba07cf82bc19625bbd8f431b925486b20`; canonical deployment `99a763f8-2104-4db0-b2ba-e43e201d8435` (Cloudflare Pages Git Integration, branch `main`).
+- Version & Release: `package.json` bumped `1.0.0` → `1.1.0`; tag `v1.1.0` and GitHub Release `Alister Blog v1.1.0` generated targeting `MAIN_HEAD` (`252e006ba07cf82bc19625bbd8f431b925486b20`).
+- Production acceptance:
+  - Homepage (`https://alistereno.top/`): HTTP 200, profile GitHub link and email `mailto:3335679109@qq.com` verified.
+  - Friends page (`https://alistereno.top/friends/`): HTTP 200, Self-link card (5-field payload exact copy), Friend application with prefilled mailto, public email display/copy, existing friend cards, and Guestbook verified.
+  - Guestbook API (`GET /api/v1/comments/friends-guestbook`): HTTP 200, valid JSON array, D1 binding active.
+  - Turnstile: widget active with `action="comment_submit"`, client script safely mounted once.
+  - Swup stability: 10 cycles Home ↔ Friends with 0 console errors, 0 script accumulation, and constant navigation performance.
+  - Regression: Posts view switcher (`文章 | 检索`), Trajectory feed and `community-start` detail, Archive CategoryBar, and About page all verified.
+  - Layout & themes: Starry and Summer skins verified; zero horizontal overflow at 390px, 768px, and 1440px.
+- Backend: D1 schema unchanged, 0 migrations required, JD Cloud PostgreSQL and Publisher unchanged.
+
 ## Recent Handoff (2026-10-07)
 
 ### Last completed
 
+- Friends Feature Production Release + v1.1.0: **PASS**.
 - Community Production Enable Verification: **PASS**.
-  - Root cause of previous discrepancy: When PR #11 merged to `main`, the first automated deployment (`745892c0`, 15:33 UTC) built before `COMMUNITY_ENABLE=true` was configured on Pages Production. Rebuild deployment `a7c6546c` (16:14 UTC) had the variable, and subsequent fresh deployment `a8f940b0` (16:45 UTC) verified canonical activation and public accessibility.
-  - Local build reproduction confirmed that without `COMMUNITY_ENABLE` the site redirects `/community/` to `/404/` and omits navigation; with `COMMUNITY_ENABLE=true` it builds the complete Community shell and navigation link.
-  - Live public internet verification confirmed desktop/mobile navigation, feed rendering, and detail view.
 - Community backend & first real post (`community-start`): **PASS**.
 - Public APIs (`GET /api/v1/community/posts`, `GET /api/v1/community/posts/:slug`): **PASS**.
 
 ### Current state
 
-- Blog Production `main`: `83e5cbea2f161c78de8ceebe43b089f4120a0a31` (active deployment `091924d5-5fc6-496d-b370-2cf274521988`).
-- Development `dev`: clean, tracking `origin/dev`.
+- Blog Production `main`: `252e006ba07cf82bc19625bbd8f431b925486b20` (canonical deployment `99a763f8-2104-4db0-b2ba-e43e201d8435`, tag `v1.1.0`).
+- Development `dev`: clean, tracking `origin/dev`, merged with `origin/main`.
+- Version: `1.1.0`.
 - Community feature state: **Production ENABLED** (user-visible name 轨迹).
+- Friends feature state: **Production PASS** (Self-link, Application, Email, Guestbook).
 
 ### Next Potential Directions
 
