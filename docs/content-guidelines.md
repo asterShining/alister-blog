@@ -32,6 +32,19 @@
 
 加密文章还支持 `encrypted`、`password`、`passwordHint` 和 `hideHomeContent`，普通文章不使用。`alias` 与 `permalink` 仅用于迁移或特殊链接。`publishedAt`、`updatedAt` 用于精确时间，使用时必须与对应日期一致。`prev*`、`next*` 是内部字段，不应手写。许可协议由全站配置管理，不是文章 frontmatter 字段。
 
+## 合并、改 slug 与下线文章
+
+- 合并两篇文章时保留其中一篇的 slug，另一篇删除后，在 `public/_redirects` 里加 301 把旧地址指过去，避免已有链接失效：
+
+  ```
+  /posts/old-slug/  /posts/new-slug/  301
+  /posts/old-slug   /posts/new-slug/  301
+  ```
+
+- 站点使用 `trailingSlash: "always"`，同一条规则把带斜杠和不带斜杠两种写法都写上。
+- 合并后给保留的文章补 `updated`，并删掉正文里重复的铺垫。
+- 浏览量、点赞和评论按 slug 存在 D1，改 slug 或合并后不会自动迁移。
+
 ## 发布检查
 
 1. 确认 slug、图片目录和引用路径一致。
