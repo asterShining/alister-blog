@@ -1,0 +1,4 @@
+# 旧文章合并后的地址重定向（Cloudflare Pages）
+# 《Alister Blog：现在做到哪了？》已并入《Alister Blog，开始记录》
+/posts/alister-blog-todo-list/  /posts/hello-alister-blog/  301
+/posts/alister-blog-todo-list   /posts/hello-alister-blog/  301
